@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Comprendre les API — Le Jeu</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg,#1f2937,#0f172a);
+    color: #f1f5f9;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .game-box {
+    background: #111827;
+    border-radius: 18px;
+    max-width: 700px;
+    width: 100%;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid #334155;
+  }
+  h1 { text-align:center; color:#38bdf8; margin-top:0; }
+  h2 { color:#facc15; }
+  .screen { display:none; animation: fade .4s ease; }
+  .screen.active { display:block; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  p { line-height:1.6; font-size:15px; }
+  .actors { display:flex; justify-content:space-between; margin:20px 0; text-align:center; }
+  .actor { flex:1; padding:10px; }
+  .actor .emoji { font-size:40px; display:block; }
+  .actor.highlight { background:#1e293b; border-radius:12px; box-shadow:0 0 0 2px #38bdf8; }
+  .actor.danger { background:#1e293b; border-radius:12px; box-shadow:0 0 0 2px #ef4444; }
+  .arrow { font-size:24px; align-self:center; color:#facc15; }
+  button {
+    background:#38bdf8; color:#0f172a; border:none; padding:12px 20px;
+    border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer;
+    margin:6px 6px 0 0; transition:.2s;
+  }
+  button:hover { background:#0ea5e9; transform:translateY(-2px); }
+  button.secondary { background:#334155; color:#f1f5f9; }
+  button.secondary:hover { background:#475569; }
+  .menu-item {
+    display:inline-block; background:#1e293b; padding:10px 14px; border-radius:10px;
+    margin:5px; cursor:pointer; border:2px solid transparent;
+  }
+  .menu-item:hover { border-color:#38bdf8; }
+  .feedback { margin-top:15px; padding:12px; border-radius:10px; font-weight:bold; }
+  .feedback.correct { background:#14532d; color:#bbf7d0; }
+  .feedback.wrong { background:#7f1d1d; color:#fecaca; }
+  .progress { height:8px; background:#1e293b; border-radius:4px; margin-bottom:20px; overflow:hidden; }
+  .progress-bar { height:100%; background:#38bdf8; width:0%; transition:.4s; }
+  .console {
+    background:#020617; border-radius:10px; padding:14px; font-family:monospace;
+    font-size:13px; color:#4ade80; white-space:pre-wrap; margin-top:12px; min-height:60px;
+    border:1px solid #1e293b;
+  }
+  .console.error { color:#f87171; border-color:#7f1d1d; }
+  .console.warn { color:#fbbf24; border-color:#78350f; }
+  select {
+    background:#1e293b; color:#f1f5f9; border:1px solid #334155; padding:8px;
+    border-radius:8px; margin:5px 6px 5px 0; font-size:14px;
+  }
+  .score { text-align:center; font-size:20px; color:#facc15; margin-top:10px; }
+  .badge {
+    display:inline-block; background:#1e293b; padding:6px 12px; border-radius:20px;
+    margin:4px; font-size:13px; border:1px solid #334155;
+  }
+  .badge.err { border-color:#ef4444; color:#fecaca; }
+  .code-table { width:100%; border-collapse: collapse; margin-top:10px; }
+  .code-table th, .code-table td { text-align:left; padding:8px 10px; border-bottom:1px solid #334155; font-size:14px; }
+  .code-table th { color:#38bdf8; }
+  .code-2xx { color:#4ade80; font-weight:bold; }
+  .code-4xx { color:#fbbf24; font-weight:bold; }
+  .code-5xx { color:#f87171; font-weight:bold; }
+  footer { text-align:center; margin-top:20px; font-size:12px; color:#64748b; }
+</style>
+</head>
+<body>
+
+<div class="game-box">
+  <h1>🔌 Le Jeu de l'API</h1>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+  <!-- ECRAN 0 : INTRO -->
+  <div class="screen active" id="screen-intro">
+    <p>Bienvenue ! Une <strong>API</strong> (Interface de Programmation d'Application), c'est un mot qui fait peur… mais le concept est simple.</p>
+    <p>Imaginez que vous allez au restaurant. Vous ne rentrez pas en cuisine préparer vous-même votre plat : vous passez par un <strong>serveur</strong> qui transmet votre commande, puis vous rapporte le résultat.</p>
+    <p><strong>Une API fonctionne exactement pareil</strong>, mais entre deux logiciels (une application et un serveur informatique).</p>
+    <p>Ce jeu va vous le faire vivre en 4 étapes :</p>
+    <ul>
+      <li>🍽️ Chapitre 1 — Le restaurant (comprendre le principe)</li>
+      <li>🚨 Chapitre 2 — Quand ça se passe mal (les erreurs)</li>
+      <li>🧠 Chapitre 3 — Le quiz (vérifier vos connaissances)</li>
+      <li>🎮 Chapitre 4 — Le simulateur (manipuler une API vous-même)</li>
+    </ul>
+    <button onclick="goTo('chap1-0')">Commencer l'aventure ▶</button>
+  </div>
+
+  <!-- CHAPITRE 1 : RESTAURANT -->
+  <div class="screen" id="screen-chap1-0">
+    <h2>🍽️ Chapitre 1 — Au restaurant</h2>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous (le Client)</div>
+      <div class="arrow">→</div>
+      <div class="actor"><span class="emoji">🧑‍💼</span>Le Serveur</div>
+      <div class="arrow">→</div>
+      <div class="actor"><span class="emoji">👨‍🍳</span>La Cuisine</div>
+    </div>
+    <p>Choisissez un plat sur le menu pour passer votre commande :</p>
+    <div>
+      <span class="menu-item" onclick="orderDish('🍕 Pizza')">🍕 Pizza</span>
+      <span class="menu-item" onclick="orderDish('🍔 Burger')">🍔 Burger</span>
+      <span class="menu-item" onclick="orderDish('🥗 Salade')">🥗 Salade</span>
+    </div>
+    <div class="console" id="console1">En attente de votre commande…</div>
+  </div>
+
+  <div class="screen" id="screen-chap1-1">
+    <h2>🍽️ Étape 1 — La Requête</h2>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow">➡️</div>
+      <div class="actor highlight"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow"></div>
+      <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>Vous venez d'envoyer votre commande <strong id="dishName"></strong> au serveur.</p>
+    <p>👉 En informatique, cela s'appelle une <strong>requête</strong> : votre application demande quelque chose à l'API.</p>
+    <button onclick="goTo('chap1-2')">Suivant ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap1-2">
+    <h2>🍽️ Étape 2 — L'API transmet</h2>
+    <div class="actors">
+      <div class="actor"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow"></div>
+      <div class="actor highlight"><span class="emoji">🧑‍💼</span>Serveur (API)</div>
+      <div class="arrow">➡️</div>
+      <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>Le serveur ne cuisine pas lui-même : il transmet votre commande à la cuisine.</p>
+    <p>👉 <strong>L'API, c'est exactement ce serveur</strong> : elle ne fait pas tout le travail elle-même, elle transmet la demande au bon système (une base de données, un autre logiciel, etc.).</p>
+    <button onclick="goTo('chap1-3')">Suivant ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap1-3">
+    <h2>🍽️ Étape 3 — Le traitement</h2>
+    <div class="actors">
+      <div class="actor"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow"></div>
+      <div class="actor"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow"></div>
+      <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>La cuisine prépare votre plat : <strong id="dishName2"></strong> 🔥</p>
+    <p>👉 C'est le <strong>traitement de la requête</strong> : le système (base de données, service, etc.) fait le travail demandé "en coulisses".</p>
+    <button onclick="goTo('chap1-4')">Suivant ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap1-4">
+    <h2>🍽️ Étape 4 — La Réponse</h2>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow">⬅️</div>
+      <div class="actor highlight"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow">⬅️</div>
+      <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>Le serveur vous rapporte votre plat : <strong id="dishName3"></strong> 🎉</p>
+    <p>👉 C'est la <strong>réponse</strong> : l'API vous renvoie le résultat de votre demande (des données, une confirmation, etc.).</p>
+    <p>Mais... que se passe-t-il si le plat n'existe pas, ou si la cuisine prend feu ? ⬇️</p>
+    <button onclick="goTo('chap1-recap')">Voir le récapitulatif ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap1-recap">
+    <h2>📋 Récapitulatif du Chapitre 1</h2>
+    <p>Voici la correspondance entre le restaurant et l'informatique :</p>
+    <div class="badge">🙋 Client = Application (site web, appli mobile)</div><br>
+    <div class="badge">🧑‍💼 Serveur = API</div><br>
+    <div class="badge">👨‍🍳 Cuisine = Serveur informatique / Base de données</div><br>
+    <div class="badge">📝 Commande = Requête</div><br>
+    <div class="badge">🍽️ Plat servi = Réponse (données)</div>
+    <p style="margin-top:15px;">Une API est donc un <strong>intermédiaire</strong> qui permet à deux logiciels de communiquer, sans...
