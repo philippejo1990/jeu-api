@@ -186,4 +186,314 @@
     <div class="badge">👨‍🍳 Cuisine = Serveur informatique / Base de données</div><br>
     <div class="badge">📝 Commande = Requête</div><br>
     <div class="badge">🍽️ Plat servi = Réponse (données)</div>
-    <p style="margin-top:15px;">Une API est donc un <strong>intermédiaire</strong> qui permet à deux logiciels de communiquer, sans...
+    <p style="margin-top:15px;">Une API est donc un <strong>intermédiaire</strong> qui permet à deux logiciels de communiquer, sans que l'un ait besoin de connaître les détails internes de l'autre.</p>
+    <p>Mais dans la vraie vie, une requête ne se passe pas toujours bien... Découvrons pourquoi. ⬇️</p>
+    <button onclick="goTo('chap2-0')">Chapitre suivant : les erreurs 🚨 ▶</button>
+  </div>
+
+  <!-- CHAPITRE 2 : ERREURS -->
+  <div class="screen" id="screen-chap2-0">
+    <h2>🚨 Chapitre 2 — Quand ça se passe mal</h2>
+    <p>Reprenons le restaurant. Vous commandez une <strong>pizza aux truffes</strong>... mais elle n'existe pas sur le menu.</p>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow">➡️</div>
+      <div class="actor danger"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow">❌</div>
+      <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>Le serveur revient vers vous : <em>"Désolé, ce plat n'existe pas."</em></p>
+    <p>👉 En API, cela s'appelle une <strong>erreur 404 – Not Found</strong> : la ressource demandée n'existe pas.</p>
+    <button onclick="goTo('chap2-1')">Suivant ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap2-1">
+    <h2>🚨 Une autre situation…</h2>
+    <p>Cette fois, votre commande est valide, mais un incendie se déclare en cuisine 🔥 : impossible de préparer quoi que ce soit.</p>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow">➡️</div>
+      <div class="actor danger"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow">➡️</div>
+      <div class="actor danger"><span class="emoji">🔥</span>Cuisine en panne</div>
+    </div>
+    <p>👉 En API, cela s'appelle une <strong>erreur 500 – Internal Server Error</strong> : le serveur a rencontré un problème interne, indépendant de votre demande.</p>
+    <button onclick="goTo('chap2-2')">Suivant ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap2-2">
+    <h2>🚨 Dernier cas : l'accès refusé</h2>
+    <p>Vous essayez d'entrer dans la partie "réservée aux membres VIP" du restaurant sans carte de membre.</p>
+    <div class="actors">
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
+      <div class="arrow">🚫</div>
+      <div class="actor danger"><span class="emoji">🧑‍💼</span>Serveur</div>
+      <div class="arrow"></div>
+      <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
+    </div>
+    <p>👉 En API, cela s'appelle une <strong>erreur 401 – Unauthorized</strong> : vous n'êtes pas identifié ou autorisé à accéder à cette ressource.</p>
+    <button onclick="goTo('chap2-recap')">Voir le tableau des codes ▶</button>
+  </div>
+
+  <div class="screen" id="screen-chap2-recap">
+    <h2>📋 Les codes de statut HTTP à connaître</h2>
+    <p>Chaque réponse d'API contient un <strong>code de statut</strong> qui indique si tout s'est bien passé ou non :</p>
+    <table class="code-table">
+      <tr><th>Code</th><th>Signification</th><th>Analogie restaurant</th></tr>
+      <tr><td class="code-2xx">200 OK</td><td>Tout s'est bien passé</td><td>Le plat arrive à table 🍽️</td></tr>
+      <tr><td class="code-4xx">400 Bad Request</td><td>La demande est mal formulée</td><td>Vous parlez une langue incompréhensible</td></tr>
+      <tr><td class="code-4xx">401 Unauthorized</td><td>Non identifié / non autorisé</td><td>Accès VIP refusé sans carte 🚫</td></tr>
+      <tr><td class="code-4xx">404 Not Found</td><td>La ressource n'existe pas</td><td>Le plat n'est pas au menu</td></tr>
+      <tr><td class="code-5xx">500 Internal Server Error</td><td>Problème côté serveur</td><td>La cuisine est en feu 🔥</td></tr>
+    </table>
+    <p style="margin-top:15px;">💡 Astuce : les codes commençant par <strong>2</strong> = succès, par <strong>4</strong> = erreur côté client (vous), par <strong>5</strong> = erreur côté serveur (l'API elle-même).</p>
+    <div class="badge err">4xx = erreur du client</div>
+    <div class="badge err">5xx = erreur du serveur</div>
+    <button onclick="goTo('chap3-0')">Passer au Quiz 🧠 ▶</button>
+  </div>
+
+  <!-- CHAPITRE 3 : QUIZ -->
+  <div class="screen" id="screen-chap3-0">
+    <h2>🧠 Chapitre 3 — Le Quiz</h2>
+    <p id="quizQuestion"></p>
+    <div id="quizOptions"></div>
+    <div class="feedback" id="quizFeedback" style="display:none;"></div>
+    <button id="quizNextBtn" style="display:none;" onclick="nextQuiz()">Question suivante ▶</button>
+  </div>
+
+  <!-- CHAPITRE 4 : SIMULATEUR -->
+  <div class="screen" id="screen-chap4-0">
+    <h2>🎮 Chapitre 4 — Simulateur d'API</h2>
+    <p>À votre tour ! Construisez une vraie requête API fictive vers un service météo. Attention, certaines combinaisons génèrent volontairement des erreurs 😉</p>
+    <p><strong>1. Choisissez une méthode :</strong></p>
+    <select id="methodSelect">
+      <option value="GET">GET (récupérer une info)</option>
+      <option value="POST">POST (envoyer / créer une info)</option>
+      <option value="DELETE">DELETE (supprimer une info)</option>
+    </select>
+    <p><strong>2. Choisissez un endpoint (l'adresse de la ressource) :</strong></p>
+    <select id="endpointSelect">
+      <option value="/meteo/paris">/meteo/paris</option>
+      <option value="/meteo/tokyo">/meteo/tokyo</option>
+      <option value="/meteo/atlantide">/meteo/atlantide (ville inconnue)</option>
+      <option value="/utilisateur/favoris">/utilisateur/favoris</option>
+      <option value="/admin/serveur">/admin/serveur (zone restreinte)</option>
+      <option value="/meteo/crash-test">/meteo/crash-test (provoque une panne)</option>
+    </select>
+    <br><button onclick="sendRequest()">🚀 Envoyer la requête</button>
+    <div class="console" id="apiConsole">En attente d'une requête…</div>
+  </div>
+
+  <div class="screen" id="screen-chap4-explain">
+    <h2 id="explainTitle">🎓 Ce qui vient de se passer</h2>
+    <p id="explainText"></p>
+    <button onclick="goTo('chap4-0')">🔁 Essayer une autre requête</button>
+    <button class="secondary" onclick="goTo('end')">Terminer le jeu 🏁</button>
+  </div>
+
+  <!-- FIN -->
+  <div class="screen" id="screen-end">
+    <h2>🏆 Félicitations !</h2>
+    <p>Vous savez maintenant ce qu'est une API :</p>
+    <p><strong>Une API est un intermédiaire qui permet à deux logiciels de communiquer</strong>, en s'envoyant des <strong>requêtes</strong> (demandes) et en recevant des <strong>réponses</strong> (données), via des <strong>endpoints</strong> (adresses), des <strong>méthodes</strong> (GET, POST, DELETE...), et des <strong>codes de statut</strong> qui indiquent si tout s'est bien passé (200) ou non (404, 401, 500...).</p>
+    <div class="score" id="finalScore"></div>
+    <p style="margin-top:15px;">Vocabulaire retenu :</p>
+    <div class="badge">Requête</div>
+    <div class="badge">Réponse</div>
+    <div class="badge">Endpoint</div>
+    <div class="badge">GET / POST / DELETE</div>
+    <div class="badge">JSON</div>
+    <div class="badge err">404 Not Found</div>
+    <div class="badge err">401 Unauthorized</div>
+    <div class="badge err">500 Server Error</div>
+    <button onclick="restartGame()">🔄 Rejouer</button>
+  </div>
+
+  <footer>Jeu pédagogique gratuit — Comprendre les API</footer>
+</div>
+
+<script>
+let score = 0;
+let quizIndex = 0;
+let currentDish = "";
+const order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap','chap2-0','chap2-1','chap2-2','chap2-recap','chap3-0','chap4-0','chap4-explain','end'];
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  const idx = order.indexOf(id);
+  document.getElementById('progressBar').style.width = (idx >= 0 ? (idx/(order.length-1))*100 : 0) + '%';
+  if (id === 'chap3-0') { quizIndex = 0; showQuiz(); }
+  if (id === 'end') { document.getElementById('finalScore').innerText = 'Score au quiz : ' + score + ' / ' + quiz.length; }
+  window.scrollTo(0,0);
+}
+
+function orderDish(dish) {
+  currentDish = dish;
+  document.getElementById('console1').innerText = "Commande envoyée : " + dish;
+  document.getElementById('dishName').innerText = dish;
+  document.getElementById('dishName2').innerText = dish;
+  document.getElementById('dishName3').innerText = dish;
+  setTimeout(() => goTo('chap1-1'), 500);
+}
+
+// QUIZ
+const quiz = [
+  {
+    q: "Que signifie l'acronyme API ?",
+    options: ["Application Programming Interface", "Automated Program Injection", "Advanced Personal Internet"],
+    correct: 0,
+    explain: "API = Application Programming Interface, c'est-à-dire une interface qui permet à des programmes de communiquer entre eux."
+  },
+  {
+    q: "Dans l'analogie du restaurant, à quoi correspond l'API ?",
+    options: ["Au client", "Au serveur/serveuse", "À la cuisine"],
+    correct: 1,
+    explain: "L'API joue le rôle d'intermédiaire, exactement comme le serveur qui transmet la commande sans cuisiner lui-même."
+  },
+  {
+    q: "Qu'est-ce qu'un 'endpoint' ?",
+    options: ["Un bug informatique", "Une adresse précise permettant d'accéder à une ressource de l'API", "Un mot de passe"],
+    correct: 1,
+    explain: "Un endpoint (ex: /meteo/paris) est l'adresse spécifique à laquelle on envoie une requête pour accéder à une ressource précise."
+  },
+  {
+    q: "Que fait une requête de méthode GET ?",
+    options: ["Elle supprime une donnée", "Elle récupère une donnée sans la modifier", "Elle bloque le serveur"],
+    correct: 1,
+    explain: "GET sert à récupérer/lire une information, sans rien modifier côté serveur."
+  },
+  {
+    q: "Quel format de données est très souvent utilisé dans les réponses d'API ?",
+    options: ["JSON", "MP3", "PDF"],
+    correct: 0,
+    explain: "Le JSON (JavaScript Object Notation) est le format le plus courant pour structurer les données échangées via une API."
+  },
+  {
+    q: "Une API renvoie le code 404. Que signifie-t-il ?",
+    options: ["Tout s'est bien passé", "La ressource demandée n'existe pas", "Le serveur a planté"],
+    correct: 1,
+    explain: "404 Not Found signifie que la ressource demandée (ex: une ville, un utilisateur) n'existe pas à cette adresse."
+  },
+  {
+    q: "Une API renvoie le code 500. À qui la faute ?",
+    options: ["Au client (vous)", "Au serveur (l'API elle-même)", "À personne, tout va bien"],
+    correct: 1,
+    explain: "Les codes en 5xx indiquent un problème interne au serveur : ce n'est pas votre requête qui pose problème, mais l'API qui rencontre un dysfonctionnement."
+  },
+  {
+    q: "Vous recevez une erreur 401 Unauthorized. Que devez-vous faire ?",
+    options: ["Réessayer la même requête sans rien changer", "Vous identifier/authentifier avant de réessayer", "Changer d'ordinateur"],
+    correct: 1,
+    explain: "401 signifie que vous n'êtes pas authentifié ou pas autorisé : il faut généralement fournir une clé API ou se connecter avant de réessayer."
+  }
+];
+
+function showQuiz() {
+  const item = quiz[quizIndex];
+  document.getElementById('quizQuestion').innerText = "Question " + (quizIndex+1) + "/" + quiz.length + " : " + item.q;
+  const optsDiv = document.getElementById('quizOptions');
+  optsDiv.innerHTML = '';
+  item.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'secondary';
+    btn.onclick = () => answerQuiz(i);
+    optsDiv.appendChild(btn);
+  });
+  document.getElementById('quizFeedback').style.display = 'none';
+  document.getElementById('quizNextBtn').style.display = 'none';
+}
+
+function answerQuiz(i) {
+  const item = quiz[quizIndex];
+  const fb = document.getElementById('quizFeedback');
+  fb.style.display = 'block';
+  if (i === item.correct) {
+    score++;
+    fb.className = 'feedback correct';
+    fb.innerText = "✅ Bonne réponse ! " + item.explain;
+  } else {
+    fb.className = 'feedback wrong';
+    fb.innerText = "❌ Pas tout à fait. " + item.explain;
+  }
+  document.querySelectorAll('#quizOptions button').forEach(b => b.disabled = true);
+  document.getElementById('quizNextBtn').style.display = 'inline-block';
+}
+
+function nextQuiz() {
+  quizIndex++;
+  if (quizIndex < quiz.length) {
+    showQuiz();
+  } else {
+    goTo('chap4-0');
+  }
+}
+
+// SIMULATEUR API (avec erreurs)
+function sendRequest() {
+  const method = document.getElementById('methodSelect').value;
+  const endpoint = document.getElementById('endpointSelect').value;
+  const consoleEl = document.getElementById('apiConsole');
+  consoleEl.className = 'console';
+  consoleEl.innerText = "Envoi de la requête...\n" + method + " " + endpoint;
+
+  setTimeout(() => {
+    let response = '';
+    let explain = '';
+    let title = '🎓 Ce qui vient de se passer';
+    let statusClass = 'console';
+
+    if (endpoint.includes('atlantide')) {
+      response = `HTTP/1.1 404 Not Found\n\n{\n  "erreur": "Ville introuvable"\n}`;
+      explain = "La ville 'Atlantide' n'existe pas dans la base de données du service météo. L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe tout simplement pas, comme un plat qui ne figure pas au menu.";
+      title = '🚨 Erreur 404 — Not Found';
+      statusClass = 'console error';
+    } else if (endpoint.includes('admin')) {
+      response = `HTTP/1.1 401 Unauthorized\n\n{\n  "erreur": "Authentification requise"\n}`;
+      explain = "L'endpoint /admin/serveur est une zone restreinte. Vous n'avez fourni aucune clé d'authentification (token/clé API), donc le serveur refuse l'accès avec une erreur 401 Unauthorized — comme la zone VIP du restaurant sans carte de membre.";
+      title = '🚨 Erreur 401 — Unauthorized';
+      statusClass = 'console warn';
+    } else if (endpoint.includes('crash-test')) {
+      response = `HTTP/1.1 500 Internal Server Error\n\n{\n  "erreur": "Une erreur interne est survenue"\n}`;
+      explain = "Cette fois, votre requête était pourtant correcte ! Mais le serveur lui-même rencontre un problème interne (bug, surcharge, panne de base de données...) : c'est une erreur 500, comme si la cuisine du restaurant prenait feu — ce n'est pas votre faute.";
+      title = '🚨 Erreur 500 — Internal Server Error';
+      statusClass = 'console error';
+    } else if (method === 'GET' && endpoint.includes('meteo')) {
+      const ville = endpoint.split('/')[2];
+      response = `HTTP/1.1 200 OK\n\n{\n  "ville": "${ville}",\n  "temperature": "22°C",\n  "condition": "Ensoleillé"\n}`;
+      explain = "Vous avez envoyé une requête GET vers l'endpoint " + endpoint + ". L'API a interrogé son système météo et vous a renvoyé une réponse 200 OK au format JSON contenant les données demandées, sans rien modifier.";
+      title = '✅ Succès — 200 OK';
+    } else if (method === 'GET' && endpoint.includes('favoris')) {
+      response = `HTTP/1.1 200 OK\n\n{\n  "favoris": ["Paris", "Tokyo"]\n}`;
+      explain = "Vous avez demandé (GET) la liste des favoris d'un utilisateur. L'API vous renvoie ces données en JSON avec un code 200 OK.";
+      title = '✅ Succès — 200 OK';
+    } else if (method === 'POST') {
+      response = `HTTP/1.1 201 Created\n\n{\n  "status": "success",\n  "message": "Donnée créée avec succès"\n}`;
+      explain = "Une requête POST sert à envoyer/créer une donnée sur le serveur (par exemple ajouter une ville en favori). L'API confirme avec un code 201 Created que l'opération a réussi.";
+      title = '✅ Succès — 201 Created';
+    } else if (method === 'DELETE') {
+      response = `HTTP/1.1 200 OK\n\n{\n  "status": "success",\n  "message": "Ressource supprimée"\n}`;
+      explain = "Une requête DELETE demande à l'API de supprimer une ressource existante (ex: retirer une ville des favoris). Le code 200 OK confirme la suppression.";
+      title = '✅ Succès — 200 OK';
+    }
+
+    consoleEl.className = statusClass;
+    consoleEl.innerText = method + " " + endpoint + "\n\nRéponse de l'API :\n" + response;
+    document.getElementById('explainTitle').innerText = title;
+    document.getElementById('explainText').innerText = explain;
+    setTimeout(() => goTo('chap4-explain'), 1200);
+  }, 700);
+}
+
+function restartGame() {
+  score = 0;
+  quizIndex = 0;
+  document.getElementById('apiConsole').innerText = "En attente d'une requête…";
+  document.getElementById('apiConsole').className = 'console';
+  document.getElementById('console1').innerText = "En attente de votre commande…";
+  goTo('intro');
+}
+</script>
+</body>
+</html>
