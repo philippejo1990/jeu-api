@@ -19,11 +19,12 @@
   .game-box {
     background: #111827;
     border-radius: 18px;
-    max-width: 700px;
+    max-width: 720px;
     width: 100%;
     padding: 30px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     border: 1px solid #334155;
+    position: relative;
   }
   h1 { text-align:center; color:#38bdf8; margin-top:0; }
   h2 { color:#facc15; }
@@ -53,7 +54,7 @@
   .feedback { margin-top:15px; padding:12px; border-radius:10px; font-weight:bold; }
   .feedback.correct { background:#14532d; color:#bbf7d0; }
   .feedback.wrong { background:#7f1d1d; color:#fecaca; }
-  .progress { height:8px; background:#1e293b; border-radius:4px; margin-bottom:20px; overflow:hidden; }
+  .progress { height:8px; background:#1e293b; border-radius:4px; margin-bottom:16px; overflow:hidden; }
   .progress-bar { height:100%; background:#38bdf8; width:0%; transition:.4s; }
   .console {
     background:#020617; border-radius:10px; padding:14px; font-family:monospace;
@@ -72,6 +73,8 @@
     margin:4px; font-size:13px; border:1px solid #334155;
   }
   .badge.err { border-color:#ef4444; color:#fecaca; }
+  .badge.unlocked { border-color:#facc15; background:#3f3a12; color:#fde68a; font-weight:bold; }
+  .badge.locked { opacity:0.4; }
   .code-table { width:100%; border-collapse: collapse; margin-top:10px; }
   .code-table th, .code-table td { text-align:left; padding:8px 10px; border-bottom:1px solid #334155; font-size:14px; }
   .code-table th { color:#38bdf8; }
@@ -79,27 +82,82 @@
   .code-4xx { color:#fbbf24; font-weight:bold; }
   .code-5xx { color:#f87171; font-weight:bold; }
   footer { text-align:center; margin-top:20px; font-size:12px; color:#64748b; }
+
+  /* HUD : mascotte + points */
+  .hud {
+    display:flex; align-items:center; justify-content:space-between;
+    background:#1e293b; border-radius:12px; padding:8px 14px; margin-bottom:16px;
+    border:1px solid #334155;
+  }
+  .mascot { font-size:34px; transition: transform .2s; }
+  .mascot.bounce { animation: bounce .5s ease; }
+  @keyframes bounce { 0%{transform:scale(1);} 30%{transform:scale(1.3);} 60%{transform:scale(0.9);} 100%{transform:scale(1);} }
+  .points { font-weight:bold; color:#facc15; font-size:15px; }
+
+  /* Shake animation pour erreurs */
+  @keyframes shake {
+    10%,90% { transform: translateX(-2px); }
+    20%,80% { transform: translateX(4px); }
+    30%,50%,70% { transform: translateX(-8px); }
+    40%,60% { transform: translateX(8px); }
+  }
+  .shake { animation: shake 0.5s; }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed; top:-10px; width:8px; height:14px; opacity:0.9;
+    z-index: 9999; pointer-events:none;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Mini-jeu de tri */
+  .sort-timer { text-align:center; font-size:22px; color:#f87171; font-weight:bold; margin-bottom:10px; }
+  .sort-chips { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px; }
+  .chip {
+    background:#38bdf8; color:#0f172a; font-weight:bold; font-size:18px;
+    padding:14px 20px; border-radius:10px; cursor:grab; user-select:none;
+    border:3px solid transparent;
+  }
+  .chip.selected { border-color:#facc15; }
+  .chip.used { opacity:0.25; cursor:default; }
+  .drop-zone {
+    background:#1e293b; border:2px dashed #475569; border-radius:12px;
+    padding:14px; margin-bottom:10px; font-size:14px; min-height:50px;
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  }
+  .drop-zone.matched { border-color:#4ade80; background:#14532d; color:#bbf7d0; }
+  .drop-zone .code-slot { font-weight:bold; font-size:18px; color:#facc15; min-width:40px; text-align:center; }
 </style>
 </head>
 <body>
 
 <div class="game-box">
   <h1>🔌 Le Jeu de l'API</h1>
+
+  <div class="hud">
+    <div id="mascot" class="mascot">🤖</div>
+    <div id="pointsDisplay" class="points">⭐ 0 pts</div>
+  </div>
+
   <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
   <!-- ECRAN 0 : INTRO -->
   <div class="screen active" id="screen-intro">
     <p>Bienvenue ! Une <strong>API</strong> (Interface de Programmation d'Application), c'est un mot qui fait peur… mais le concept est simple.</p>
     <p>Imaginez que vous allez au restaurant. Vous ne rentrez pas en cuisine préparer vous-même votre plat : vous passez par un <strong>serveur</strong> qui transmet votre commande, puis vous rapporte le résultat.</p>
-    <p><strong>Une API fonctionne exactement pareil</strong>, mais entre deux logiciels (une application et un serveur informatique).</p>
-    <p>Ce jeu va vous le faire vivre en 4 étapes :</p>
+    <p><strong>Une API fonctionne exactement pareil</strong>, mais entre deux logiciels.</p>
+    <p>Ce jeu va vous le faire vivre en 5 étapes :</p>
     <ul>
-      <li>🍽️ Chapitre 1 — Le restaurant (comprendre le principe)</li>
+      <li>🍽️ Chapitre 1 — Le restaurant</li>
       <li>🚨 Chapitre 2 — Quand ça se passe mal (les erreurs)</li>
-      <li>🧠 Chapitre 3 — Le quiz (vérifier vos connaissances)</li>
-      <li>🎮 Chapitre 4 — Le simulateur (manipuler une API vous-même)</li>
+      <li>🧩 Chapitre 3 — Mini-jeu de tri des codes HTTP</li>
+      <li>🧠 Chapitre 4 — Le quiz</li>
+      <li>🎮 Chapitre 5 — Le simulateur d'API</li>
     </ul>
-    <button onclick="goTo('chap1-0')">Commencer l'aventure ▶</button>
+    <p>Gagnez des <strong>points</strong> ⭐ et débloquez des <strong>badges</strong> 🏅 tout au long du parcours !</p>
+    <button onclick="startAdventure()">Commencer l'aventure ▶</button>
   </div>
 
   <!-- CHAPITRE 1 : RESTAURANT -->
@@ -131,7 +189,7 @@
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Vous venez d'envoyer votre commande <strong id="dishName"></strong> au serveur.</p>
-    <p>👉 En informatique, cela s'appelle une <strong>requête</strong> : votre application demande quelque chose à l'API.</p>
+    <p>👉 En informatique, cela s'appelle une <strong>requête</strong>.</p>
     <button onclick="goTo('chap1-2')">Suivant ▶</button>
   </div>
 
@@ -145,7 +203,7 @@
       <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Le serveur ne cuisine pas lui-même : il transmet votre commande à la cuisine.</p>
-    <p>👉 <strong>L'API, c'est exactement ce serveur</strong> : elle ne fait pas tout le travail elle-même, elle transmet la demande au bon système (une base de données, un autre logiciel, etc.).</p>
+    <p>👉 <strong>L'API, c'est exactement ce serveur</strong>.</p>
     <button onclick="goTo('chap1-3')">Suivant ▶</button>
   </div>
 
@@ -159,7 +217,7 @@
       <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>La cuisine prépare votre plat : <strong id="dishName2"></strong> 🔥</p>
-    <p>👉 C'est le <strong>traitement de la requête</strong> : le système (base de données, service, etc.) fait le travail demandé "en coulisses".</p>
+    <p>👉 C'est le <strong>traitement de la requête</strong>.</p>
     <button onclick="goTo('chap1-4')">Suivant ▶</button>
   </div>
 
@@ -173,28 +231,25 @@
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Le serveur vous rapporte votre plat : <strong id="dishName3"></strong> 🎉</p>
-    <p>👉 C'est la <strong>réponse</strong> : l'API vous renvoie le résultat de votre demande (des données, une confirmation, etc.).</p>
-    <p>Mais... que se passe-t-il si le plat n'existe pas, ou si la cuisine prend feu ? ⬇️</p>
+    <p>👉 C'est la <strong>réponse</strong>.</p>
     <button onclick="goTo('chap1-recap')">Voir le récapitulatif ▶</button>
   </div>
 
   <div class="screen" id="screen-chap1-recap">
     <h2>📋 Récapitulatif du Chapitre 1</h2>
-    <p>Voici la correspondance entre le restaurant et l'informatique :</p>
-    <div class="badge">🙋 Client = Application (site web, appli mobile)</div><br>
+    <div class="badge">🙋 Client = Application</div><br>
     <div class="badge">🧑‍💼 Serveur = API</div><br>
-    <div class="badge">👨‍🍳 Cuisine = Serveur informatique / Base de données</div><br>
+    <div class="badge">👨‍🍳 Cuisine = Serveur informatique / BDD</div><br>
     <div class="badge">📝 Commande = Requête</div><br>
-    <div class="badge">🍽️ Plat servi = Réponse (données)</div>
-    <p style="margin-top:15px;">Une API est donc un <strong>intermédiaire</strong> qui permet à deux logiciels de communiquer, sans que l'un ait besoin de connaître les détails internes de l'autre.</p>
-    <p>Mais dans la vraie vie, une requête ne se passe pas toujours bien... Découvrons pourquoi. ⬇️</p>
+    <div class="badge">🍽️ Plat servi = Réponse</div>
+    <p style="margin-top:15px;">Une API est un <strong>intermédiaire</strong> entre deux logiciels.</p>
     <button onclick="goTo('chap2-0')">Chapitre suivant : les erreurs 🚨 ▶</button>
   </div>
 
   <!-- CHAPITRE 2 : ERREURS -->
   <div class="screen" id="screen-chap2-0">
     <h2>🚨 Chapitre 2 — Quand ça se passe mal</h2>
-    <p>Reprenons le restaurant. Vous commandez une <strong>pizza aux truffes</strong>... mais elle n'existe pas sur le menu.</p>
+    <p>Vous commandez une <strong>pizza aux truffes</strong>... qui n'existe pas sur le menu.</p>
     <div class="actors">
       <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
       <div class="arrow">➡️</div>
@@ -202,14 +257,13 @@
       <div class="arrow">❌</div>
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
-    <p>Le serveur revient vers vous : <em>"Désolé, ce plat n'existe pas."</em></p>
-    <p>👉 En API, cela s'appelle une <strong>erreur 404 – Not Found</strong> : la ressource demandée n'existe pas.</p>
+    <p>👉 <strong>Erreur 404 – Not Found</strong> : la ressource demandée n'existe pas.</p>
     <button onclick="goTo('chap2-1')">Suivant ▶</button>
   </div>
 
   <div class="screen" id="screen-chap2-1">
     <h2>🚨 Une autre situation…</h2>
-    <p>Cette fois, votre commande est valide, mais un incendie se déclare en cuisine 🔥 : impossible de préparer quoi que ce soit.</p>
+    <p>Un incendie se déclare en cuisine 🔥 : impossible de préparer quoi que ce soit.</p>
     <div class="actors">
       <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
       <div class="arrow">➡️</div>
@@ -217,13 +271,13 @@
       <div class="arrow">➡️</div>
       <div class="actor danger"><span class="emoji">🔥</span>Cuisine en panne</div>
     </div>
-    <p>👉 En API, cela s'appelle une <strong>erreur 500 – Internal Server Error</strong> : le serveur a rencontré un problème interne, indépendant de votre demande.</p>
+    <p>👉 <strong>Erreur 500 – Internal Server Error</strong>.</p>
     <button onclick="goTo('chap2-2')">Suivant ▶</button>
   </div>
 
   <div class="screen" id="screen-chap2-2">
     <h2>🚨 Dernier cas : l'accès refusé</h2>
-    <p>Vous essayez d'entrer dans la partie "réservée aux membres VIP" du restaurant sans carte de membre.</p>
+    <p>Vous essayez d'entrer dans la zone "réservée aux membres VIP" sans carte.</p>
     <div class="actors">
       <div class="actor highlight"><span class="emoji">🙋</span>Vous</div>
       <div class="arrow">🚫</div>
@@ -231,47 +285,63 @@
       <div class="arrow"></div>
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
-    <p>👉 En API, cela s'appelle une <strong>erreur 401 – Unauthorized</strong> : vous n'êtes pas identifié ou autorisé à accéder à cette ressource.</p>
+    <p>👉 <strong>Erreur 401 – Unauthorized</strong>.</p>
     <button onclick="goTo('chap2-recap')">Voir le tableau des codes ▶</button>
   </div>
 
   <div class="screen" id="screen-chap2-recap">
     <h2>📋 Les codes de statut HTTP à connaître</h2>
-    <p>Chaque réponse d'API contient un <strong>code de statut</strong> qui indique si tout s'est bien passé ou non :</p>
     <table class="code-table">
-      <tr><th>Code</th><th>Signification</th><th>Analogie restaurant</th></tr>
-      <tr><td class="code-2xx">200 OK</td><td>Tout s'est bien passé</td><td>Le plat arrive à table 🍽️</td></tr>
-      <tr><td class="code-4xx">400 Bad Request</td><td>La demande est mal formulée</td><td>Vous parlez une langue incompréhensible</td></tr>
-      <tr><td class="code-4xx">401 Unauthorized</td><td>Non identifié / non autorisé</td><td>Accès VIP refusé sans carte 🚫</td></tr>
-      <tr><td class="code-4xx">404 Not Found</td><td>La ressource n'existe pas</td><td>Le plat n'est pas au menu</td></tr>
-      <tr><td class="code-5xx">500 Internal Server Error</td><td>Problème côté serveur</td><td>La cuisine est en feu 🔥</td></tr>
+      <tr><th>Code</th><th>Signification</th><th>Analogie</th></tr>
+      <tr><td class="code-2xx">200 OK</td><td>Tout s'est bien passé</td><td>Le plat arrive 🍽️</td></tr>
+      <tr><td class="code-4xx">401</td><td>Non autorisé</td><td>Accès VIP refusé 🚫</td></tr>
+      <tr><td class="code-4xx">404</td><td>Introuvable</td><td>Plat pas au menu</td></tr>
+      <tr><td class="code-5xx">500</td><td>Erreur serveur</td><td>Cuisine en feu 🔥</td></tr>
     </table>
-    <p style="margin-top:15px;">💡 Astuce : les codes commençant par <strong>2</strong> = succès, par <strong>4</strong> = erreur côté client (vous), par <strong>5</strong> = erreur côté serveur (l'API elle-même).</p>
-    <div class="badge err">4xx = erreur du client</div>
-    <div class="badge err">5xx = erreur du serveur</div>
-    <button onclick="goTo('chap3-0')">Passer au Quiz 🧠 ▶</button>
+    <button onclick="goTo('sort-intro')">Chapitre 3 : Mini-jeu de tri 🧩 ▶</button>
   </div>
 
-  <!-- CHAPITRE 3 : QUIZ -->
-  <div class="screen" id="screen-chap3-0">
-    <h2>🧠 Chapitre 3 — Le Quiz</h2>
+  <!-- CHAPITRE 3 : MINI-JEU DE TRI -->
+  <div class="screen" id="screen-sort-intro">
+    <h2>🧩 Chapitre 3 — Mini-jeu de tri</h2>
+    <p>Vous avez <strong>30 secondes</strong> pour associer chaque code HTTP à sa bonne définition.</p>
+    <p>Glissez-déposez chaque étiquette de code dans la bonne case (ou cliquez sur un code puis sur la case correspondante).</p>
+    <button onclick="startSortGame()">🚀 Démarrer le défi</button>
+  </div>
+
+  <div class="screen" id="screen-sort-game">
+    <h2>🧩 Associez chaque code !</h2>
+    <div class="sort-timer" id="sortTimer">⏱️ 30</div>
+    <div class="sort-chips" id="sortChips"></div>
+    <div id="sortZones"></div>
+  </div>
+
+  <div class="screen" id="screen-sort-result">
+    <h2>🧩 Résultat du mini-jeu</h2>
+    <p id="sortResultText"></p>
+    <button onclick="goTo('quiz-0')">Passer au Quiz 🧠 ▶</button>
+  </div>
+
+  <!-- CHAPITRE 4 : QUIZ -->
+  <div class="screen" id="screen-quiz-0">
+    <h2>🧠 Chapitre 4 — Le Quiz</h2>
     <p id="quizQuestion"></p>
     <div id="quizOptions"></div>
     <div class="feedback" id="quizFeedback" style="display:none;"></div>
     <button id="quizNextBtn" style="display:none;" onclick="nextQuiz()">Question suivante ▶</button>
   </div>
 
-  <!-- CHAPITRE 4 : SIMULATEUR -->
-  <div class="screen" id="screen-chap4-0">
-    <h2>🎮 Chapitre 4 — Simulateur d'API</h2>
-    <p>À votre tour ! Construisez une vraie requête API fictive vers un service météo. Attention, certaines combinaisons génèrent volontairement des erreurs 😉</p>
-    <p><strong>1. Choisissez une méthode :</strong></p>
+  <!-- CHAPITRE 5 : SIMULATEUR -->
+  <div class="screen" id="screen-sim-0">
+    <h2>🎮 Chapitre 5 — Simulateur d'API</h2>
+    <p>Construisez une requête vers un service météo fictif. Certaines combinaisons génèrent volontairement des erreurs 😉</p>
+    <p><strong>1. Méthode :</strong></p>
     <select id="methodSelect">
       <option value="GET">GET (récupérer une info)</option>
-      <option value="POST">POST (envoyer / créer une info)</option>
-      <option value="DELETE">DELETE (supprimer une info)</option>
+      <option value="POST">POST (envoyer / créer)</option>
+      <option value="DELETE">DELETE (supprimer)</option>
     </select>
-    <p><strong>2. Choisissez un endpoint (l'adresse de la ressource) :</strong></p>
+    <p><strong>2. Endpoint :</strong></p>
     <select id="endpointSelect">
       <option value="/meteo/paris">/meteo/paris</option>
       <option value="/meteo/tokyo">/meteo/tokyo</option>
@@ -284,109 +354,278 @@
     <div class="console" id="apiConsole">En attente d'une requête…</div>
   </div>
 
-  <div class="screen" id="screen-chap4-explain">
+  <div class="screen" id="screen-sim-explain">
     <h2 id="explainTitle">🎓 Ce qui vient de se passer</h2>
     <p id="explainText"></p>
-    <button onclick="goTo('chap4-0')">🔁 Essayer une autre requête</button>
+    <button onclick="goTo('sim-0')">🔁 Essayer une autre requête</button>
     <button class="secondary" onclick="goTo('end')">Terminer le jeu 🏁</button>
   </div>
 
   <!-- FIN -->
   <div class="screen" id="screen-end">
     <h2>🏆 Félicitations !</h2>
-    <p>Vous savez maintenant ce qu'est une API :</p>
-    <p><strong>Une API est un intermédiaire qui permet à deux logiciels de communiquer</strong>, en s'envoyant des <strong>requêtes</strong> (demandes) et en recevant des <strong>réponses</strong> (données), via des <strong>endpoints</strong> (adresses), des <strong>méthodes</strong> (GET, POST, DELETE...), et des <strong>codes de statut</strong> qui indiquent si tout s'est bien passé (200) ou non (404, 401, 500...).</p>
+    <p>Vous savez maintenant ce qu'est une API : un intermédiaire qui permet à deux logiciels de communiquer via des <strong>requêtes</strong>, des <strong>réponses</strong>, des <strong>endpoints</strong>, des <strong>méthodes</strong> et des <strong>codes de statut</strong>.</p>
     <div class="score" id="finalScore"></div>
-    <p style="margin-top:15px;">Vocabulaire retenu :</p>
-    <div class="badge">Requête</div>
-    <div class="badge">Réponse</div>
-    <div class="badge">Endpoint</div>
-    <div class="badge">GET / POST / DELETE</div>
-    <div class="badge">JSON</div>
-    <div class="badge err">404 Not Found</div>
-    <div class="badge err">401 Unauthorized</div>
-    <div class="badge err">500 Server Error</div>
-    <button onclick="restartGame()">🔄 Rejouer</button>
+    <div class="score" id="finalPoints"></div>
+    <p style="margin-top:20px;"><strong>Vos badges :</strong></p>
+    <div id="badgesList"></div>
+    <button onclick="restartGame()" style="margin-top:20px;">🔄 Rejouer</button>
   </div>
 
   <footer>Jeu pédagogique gratuit — Comprendre les API</footer>
 </div>
 
 <script>
-let score = 0;
+/* ===================== ETAT GLOBAL ===================== */
+let score = 0;              // score du quiz
 let quizIndex = 0;
 let currentDish = "";
-const order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap','chap2-0','chap2-1','chap2-2','chap2-recap','chap3-0','chap4-0','chap4-explain','end'];
+let totalPoints = 0;
+let wrongAnswersCount = 0;  // erreurs cumulées (quiz + tri)
+let gameStartTime = null;
+let sortCorrectCount = 0;
+let sortTimeLeft = 30;
+let sortTimerInterval = null;
+let selectedChip = null;
 
+const order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap',
+  'chap2-0','chap2-1','chap2-2','chap2-recap','sort-intro','sort-game','sort-result',
+  'quiz-0','sim-0','sim-explain','end'];
+
+/* ===================== NAVIGATION ===================== */
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
   const idx = order.indexOf(id);
   document.getElementById('progressBar').style.width = (idx >= 0 ? (idx/(order.length-1))*100 : 0) + '%';
-  if (id === 'chap3-0') { quizIndex = 0; showQuiz(); }
-  if (id === 'end') { document.getElementById('finalScore').innerText = 'Score au quiz : ' + score + ' / ' + quiz.length; }
+  if (id === 'quiz-0') { quizIndex = 0; score = 0; showQuiz(); }
+  if (id === 'end') { showEndScreen(); }
   window.scrollTo(0,0);
 }
 
+function startAdventure() {
+  gameStartTime = Date.now();
+  goTo('chap1-0');
+}
+
+/* ===================== SON (Web Audio API) ===================== */
+function playTone(freq, duration, type, volume) {
+  try {
+    const ctx = window.audioCtx || (window.audioCtx = new (window.AudioContext || window.webkitAudioContext)());
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.value = volume || 0.15;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (duration/1000));
+    osc.stop(ctx.currentTime + (duration/1000));
+  } catch(e) { /* audio non disponible, on ignore */ }
+}
+function playCorrectSound() {
+  playTone(880, 120, 'sine', 0.15);
+  setTimeout(() => playTone(1320, 150, 'sine', 0.15), 120);
+}
+function playWrongSound() {
+  playTone(160, 300, 'sawtooth', 0.2);
+}
+
+/* ===================== MASCOTTE ===================== */
+function setMascot(emoji) {
+  const m = document.getElementById('mascot');
+  if (!m) return;
+  m.innerText = emoji;
+  m.classList.remove('bounce');
+  void m.offsetWidth;
+  m.classList.add('bounce');
+}
+
+/* ===================== SHAKE ===================== */
+function shakeElement(el) {
+  if (!el) return;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+
+/* ===================== POINTS ===================== */
+function addPoints(n) {
+  totalPoints += n;
+  document.getElementById('pointsDisplay').innerText = '⭐ ' + totalPoints + ' pts';
+}
+
+/* ===================== CONFETTI ===================== */
+function launchConfetti(count) {
+  count = count || 60;
+  const colors = ['#38bdf8','#facc15','#4ade80','#f87171','#a78bfa'];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random()*100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animation = 'confettiFall ' + (2 + Math.random()*1.5) + 's linear forwards';
+    piece.style.transform = 'rotate(' + Math.random()*360 + 'deg)';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+/* ===================== CHAPITRE 1 ===================== */
 function orderDish(dish) {
   currentDish = dish;
   document.getElementById('console1').innerText = "Commande envoyée : " + dish;
   document.getElementById('dishName').innerText = dish;
   document.getElementById('dishName2').innerText = dish;
   document.getElementById('dishName3').innerText = dish;
+  addPoints(5);
+  setMascot('😊');
   setTimeout(() => goTo('chap1-1'), 500);
 }
 
-// QUIZ
+/* ===================== MINI-JEU DE TRI ===================== */
+const sortData = [
+  { code: "200", def: "Tout s'est bien passé ✅" },
+  { code: "404", def: "La ressource n'existe pas ❓" },
+  { code: "401", def: "Non autorisé / non authentifié 🚫" },
+  { code: "500", def: "Erreur interne du serveur 🔥" }
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startSortGame() {
+  sortCorrectCount = 0;
+  sortTimeLeft = 30;
+  selectedChip = null;
+  goTo('sort-game');
+
+  const chipsContainer = document.getElementById('sortChips');
+  const zonesContainer = document.getElementById('sortZones');
+  chipsContainer.innerHTML = '';
+  zonesContainer.innerHTML = '';
+
+  const shuffledCodes = shuffle(sortData.map(d => d.code));
+  shuffledCodes.forEach(code => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerText = code;
+    chip.draggable = true;
+    chip.dataset.code = code;
+    chip.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', code);
+    });
+    chip.addEventListener('click', () => {
+      if (chip.classList.contains('used')) return;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedChip = chip;
+    });
+    chipsContainer.appendChild(chip);
+  });
+
+  const shuffledDefs = shuffle(sortData);
+  shuffledDefs.forEach(item => {
+    const zone = document.createElement('div');
+    zone.className = 'drop-zone';
+    zone.dataset.code = item.code;
+    zone.innerHTML = '<span>' + item.def + '</span><span class="code-slot">?</span>';
+    zone.addEventListener('dragover', e => e.preventDefault());
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      const code = e.dataTransfer.getData('text/plain');
+      handleSortAttempt(code, zone);
+    });
+    zone.addEventListener('click', () => {
+      if (selectedChip && !zone.classList.contains('matched')) {
+        handleSortAttempt(selectedChip.dataset.code, zone);
+      }
+    });
+    zonesContainer.appendChild(zone);
+  });
+
+  sortTimerInterval = setInterval(() => {
+    sortTimeLeft--;
+    document.getElementById('sortTimer').innerText = '⏱️ ' + sortTimeLeft;
+    if (sortTimeLeft <= 0) {
+      endSortGame();
+    }
+  }, 1000);
+}
+
+function handleSortAttempt(code, zone) {
+  if (zone.classList.contains('matched')) return;
+  const chip = document.querySelector('.chip[data-code="' + code + '"]:not(.used)');
+  if (!chip) return;
+
+  if (zone.dataset.code === code) {
+    zone.classList.add('matched');
+    zone.querySelector('.code-slot').innerText = code;
+    chip.classList.add('used');
+    chip.classList.remove('selected');
+    selectedChip = null;
+    sortCorrectCount++;
+    addPoints(15);
+    playCorrectSound();
+    setMascot('😄');
+    const allMatched = document.querySelectorAll('.drop-zone.matched').length === sortData.length;
+    if (allMatched) endSortGame();
+  } else {
+    wrongAnswersCount++;
+    playWrongSound();
+    setMascot('😰');
+    shakeElement(zone);
+  }
+}
+
+function endSortGame() {
+  clearInterval(sortTimerInterval);
+  document.getElementById('sortResultText').innerText =
+    "Vous avez correctement associé " + sortCorrectCount + " code(s) sur " + sortData.length + " !";
+  goTo('sort-result');
+}
+
+/* ===================== QUIZ ===================== */
 const quiz = [
-  {
-    q: "Que signifie l'acronyme API ?",
+  { q: "Que signifie l'acronyme API ?",
     options: ["Application Programming Interface", "Automated Program Injection", "Advanced Personal Internet"],
     correct: 0,
-    explain: "API = Application Programming Interface, c'est-à-dire une interface qui permet à des programmes de communiquer entre eux."
-  },
-  {
-    q: "Dans l'analogie du restaurant, à quoi correspond l'API ?",
+    explain: "API = Application Programming Interface." },
+  { q: "Dans l'analogie du restaurant, à quoi correspond l'API ?",
     options: ["Au client", "Au serveur/serveuse", "À la cuisine"],
     correct: 1,
-    explain: "L'API joue le rôle d'intermédiaire, exactement comme le serveur qui transmet la commande sans cuisiner lui-même."
-  },
-  {
-    q: "Qu'est-ce qu'un 'endpoint' ?",
-    options: ["Un bug informatique", "Une adresse précise permettant d'accéder à une ressource de l'API", "Un mot de passe"],
+    explain: "L'API joue le rôle d'intermédiaire, comme le serveur." },
+  { q: "Qu'est-ce qu'un 'endpoint' ?",
+    options: ["Un bug informatique", "Une adresse précise permettant d'accéder à une ressource", "Un mot de passe"],
     correct: 1,
-    explain: "Un endpoint (ex: /meteo/paris) est l'adresse spécifique à laquelle on envoie une requête pour accéder à une ressource précise."
-  },
-  {
-    q: "Que fait une requête de méthode GET ?",
+    explain: "Un endpoint est l'adresse spécifique d'une ressource." },
+  { q: "Que fait une requête GET ?",
     options: ["Elle supprime une donnée", "Elle récupère une donnée sans la modifier", "Elle bloque le serveur"],
     correct: 1,
-    explain: "GET sert à récupérer/lire une information, sans rien modifier côté serveur."
-  },
-  {
-    q: "Quel format de données est très souvent utilisé dans les réponses d'API ?",
+    explain: "GET sert à récupérer/lire une information." },
+  { q: "Quel format de données est très courant dans les réponses d'API ?",
     options: ["JSON", "MP3", "PDF"],
     correct: 0,
-    explain: "Le JSON (JavaScript Object Notation) est le format le plus courant pour structurer les données échangées via une API."
-  },
-  {
-    q: "Une API renvoie le code 404. Que signifie-t-il ?",
+    explain: "Le JSON est le format le plus courant." },
+  { q: "Une API renvoie le code 404. Que signifie-t-il ?",
     options: ["Tout s'est bien passé", "La ressource demandée n'existe pas", "Le serveur a planté"],
     correct: 1,
-    explain: "404 Not Found signifie que la ressource demandée (ex: une ville, un utilisateur) n'existe pas à cette adresse."
-  },
-  {
-    q: "Une API renvoie le code 500. À qui la faute ?",
-    options: ["Au client (vous)", "Au serveur (l'API elle-même)", "À personne, tout va bien"],
+    explain: "404 Not Found signifie que la ressource n'existe pas." },
+  { q: "Une API renvoie le code 500. À qui la faute ?",
+    options: ["Au client (vous)", "Au serveur (l'API elle-même)", "À personne"],
     correct: 1,
-    explain: "Les codes en 5xx indiquent un problème interne au serveur : ce n'est pas votre requête qui pose problème, mais l'API qui rencontre un dysfonctionnement."
-  },
-  {
-    q: "Vous recevez une erreur 401 Unauthorized. Que devez-vous faire ?",
-    options: ["Réessayer la même requête sans rien changer", "Vous identifier/authentifier avant de réessayer", "Changer d'ordinateur"],
+    explain: "Les codes 5xx indiquent un problème côté serveur." },
+  { q: "Vous recevez une erreur 401. Que devez-vous faire ?",
+    options: ["Réessayer sans rien changer", "Vous authentifier avant de réessayer", "Changer d'ordinateur"],
     correct: 1,
-    explain: "401 signifie que vous n'êtes pas authentifié ou pas autorisé : il faut généralement fournir une clé API ou se connecter avant de réessayer."
-  }
+    explain: "401 signifie qu'il faut s'authentifier." }
 ];
 
 function showQuiz() {
@@ -411,9 +650,16 @@ function answerQuiz(i) {
   fb.style.display = 'block';
   if (i === item.correct) {
     score++;
+    addPoints(10);
+    playCorrectSound();
+    setMascot('😄');
     fb.className = 'feedback correct';
     fb.innerText = "✅ Bonne réponse ! " + item.explain;
   } else {
+    wrongAnswersCount++;
+    playWrongSound();
+    setMascot('😰');
+    shakeElement(fb);
     fb.className = 'feedback wrong';
     fb.innerText = "❌ Pas tout à fait. " + item.explain;
   }
@@ -426,11 +672,11 @@ function nextQuiz() {
   if (quizIndex < quiz.length) {
     showQuiz();
   } else {
-    goTo('chap4-0');
+    goTo('sim-0');
   }
 }
 
-// SIMULATEUR API (avec erreurs)
+/* ===================== SIMULATEUR API ===================== */
 function sendRequest() {
   const method = document.getElementById('methodSelect').value;
   const endpoint = document.getElementById('endpointSelect').value;
@@ -445,53 +691,101 @@ function sendRequest() {
     let statusClass = 'console';
 
     if (endpoint.includes('atlantide')) {
-      response = `HTTP/1.1 404 Not Found\n\n{\n  "erreur": "Ville introuvable"\n}`;
-      explain = "La ville 'Atlantide' n'existe pas dans la base de données du service météo. L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe tout simplement pas, comme un plat qui ne figure pas au menu.";
+      response = "HTTP/1.1 404 Not Found\n\n{\n  \"erreur\": \"Ville introuvable\"\n}";
+      explain = "L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe pas.";
       title = '🚨 Erreur 404 — Not Found';
       statusClass = 'console error';
+      setMascot('😕');
     } else if (endpoint.includes('admin')) {
-      response = `HTTP/1.1 401 Unauthorized\n\n{\n  "erreur": "Authentification requise"\n}`;
-      explain = "L'endpoint /admin/serveur est une zone restreinte. Vous n'avez fourni aucune clé d'authentification (token/clé API), donc le serveur refuse l'accès avec une erreur 401 Unauthorized — comme la zone VIP du restaurant sans carte de membre.";
+      response = "HTTP/1.1 401 Unauthorized\n\n{\n  \"erreur\": \"Authentification requise\"\n}";
+      explain = "L'endpoint est une zone restreinte : erreur 401 Unauthorized.";
       title = '🚨 Erreur 401 — Unauthorized';
       statusClass = 'console warn';
+      setMascot('🚫');
     } else if (endpoint.includes('crash-test')) {
-      response = `HTTP/1.1 500 Internal Server Error\n\n{\n  "erreur": "Une erreur interne est survenue"\n}`;
-      explain = "Cette fois, votre requête était pourtant correcte ! Mais le serveur lui-même rencontre un problème interne (bug, surcharge, panne de base de données...) : c'est une erreur 500, comme si la cuisine du restaurant prenait feu — ce n'est pas votre faute.";
+      response = "HTTP/1.1 500 Internal Server Error\n\n{\n  \"erreur\": \"Une erreur interne est survenue\"\n}";
+      explain = "Le serveur rencontre un problème interne : erreur 500.";
       title = '🚨 Erreur 500 — Internal Server Error';
       statusClass = 'console error';
+      setMascot('🔥');
     } else if (method === 'GET' && endpoint.includes('meteo')) {
       const ville = endpoint.split('/')[2];
-      response = `HTTP/1.1 200 OK\n\n{\n  "ville": "${ville}",\n  "temperature": "22°C",\n  "condition": "Ensoleillé"\n}`;
-      explain = "Vous avez envoyé une requête GET vers l'endpoint " + endpoint + ". L'API a interrogé son système météo et vous a renvoyé une réponse 200 OK au format JSON contenant les données demandées, sans rien modifier.";
+      response = "HTTP/1.1 200 OK\n\n{\n  \"ville\": \"" + ville + "\",\n  \"temperature\": \"22°C\",\n  \"condition\": \"Ensoleillé\"\n}";
+      explain = "Requête GET réussie : l'API renvoie les données au format JSON avec un code 200 OK.";
       title = '✅ Succès — 200 OK';
+      setMascot('🎉');
     } else if (method === 'GET' && endpoint.includes('favoris')) {
-      response = `HTTP/1.1 200 OK\n\n{\n  "favoris": ["Paris", "Tokyo"]\n}`;
-      explain = "Vous avez demandé (GET) la liste des favoris d'un utilisateur. L'API vous renvoie ces données en JSON avec un code 200 OK.";
+      response = "HTTP/1.1 200 OK\n\n{\n  \"favoris\": [\"Paris\", \"Tokyo\"]\n}";
+      explain = "Requête GET réussie : la liste des favoris est renvoyée avec un code 200 OK.";
       title = '✅ Succès — 200 OK';
+      setMascot('🎉');
     } else if (method === 'POST') {
-      response = `HTTP/1.1 201 Created\n\n{\n  "status": "success",\n  "message": "Donnée créée avec succès"\n}`;
-      explain = "Une requête POST sert à envoyer/créer une donnée sur le serveur (par exemple ajouter une ville en favori). L'API confirme avec un code 201 Created que l'opération a réussi.";
+      response = "HTTP/1.1 201 Created\n\n{\n  \"status\": \"success\",\n  \"message\": \"Donnée créée avec succès\"\n}";
+      explain = "Une requête POST crée une donnée sur le serveur. Code 201 Created.";
       title = '✅ Succès — 201 Created';
+      setMascot('🎉');
     } else if (method === 'DELETE') {
-      response = `HTTP/1.1 200 OK\n\n{\n  "status": "success",\n  "message": "Ressource supprimée"\n}`;
-      explain = "Une requête DELETE demande à l'API de supprimer une ressource existante (ex: retirer une ville des favoris). Le code 200 OK confirme la suppression.";
+      response = "HTTP/1.1 200 OK\n\n{\n  \"status\": \"success\",\n  \"message\": \"Ressource supprimée\"\n}";
+      explain = "Une requête DELETE supprime une ressource. Code 200 OK.";
       title = '✅ Succès — 200 OK';
+      setMascot('🎉');
     }
 
+    addPoints(8);
     consoleEl.className = statusClass;
     consoleEl.innerText = method + " " + endpoint + "\n\nRéponse de l'API :\n" + response;
     document.getElementById('explainTitle').innerText = title;
     document.getElementById('explainText').innerText = explain;
-    setTimeout(() => goTo('chap4-explain'), 1200);
+    setTimeout(() => goTo('sim-explain'), 1200);
   }, 700);
 }
 
+/* ===================== ECRAN FINAL / BADGES ===================== */
+function showEndScreen() {
+  document.getElementById('finalScore').innerText = 'Score au quiz : ' + score + ' / ' + quiz.length;
+  document.getElementById('finalPoints').innerText = 'Total de points cumulés : ⭐ ' + totalPoints + ' pts';
+
+  const elapsedMs = gameStartTime ? (Date.now() - gameStartTime) : 999999;
+  const elapsedMin = elapsedMs / 60000;
+
+  const badges = [
+    { emoji: '🥇', name: 'Expert HTTP', desc: 'Score parfait au quiz', unlocked: score === quiz.length },
+    { emoji: '🔥', name: 'Aucune erreur', desc: 'Aucune mauvaise réponse pendant le quiz', unlocked: wrongAnswersCount === 0 },
+    { emoji: '⚡', name: 'Speed runner', desc: 'Jeu terminé en moins de 6 minutes', unlocked: elapsedMin < 6 }
+  ];
+
+  const badgesList = document.getElementById('badgesList');
+  badgesList.innerHTML = '';
+  let anyUnlocked = false;
+  badges.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'badge ' + (b.unlocked ? 'unlocked' : 'locked');
+    div.innerText = b.emoji + ' ' + b.name + ' — ' + b.desc;
+    badgesList.appendChild(div);
+    if (b.unlocked) anyUnlocked = true;
+  });
+
+  if (anyUnlocked) {
+    launchConfetti(80);
+    setMascot('🏆');
+  } else {
+    setMascot('🙂');
+  }
+}
+
+/* ===================== RESET ===================== */
 function restartGame() {
   score = 0;
   quizIndex = 0;
+  totalPoints = 0;
+  wrongAnswersCount = 0;
+  sortCorrectCount = 0;
+  gameStartTime = null;
+  document.getElementById('pointsDisplay').innerText = '⭐ 0 pts';
   document.getElementById('apiConsole').innerText = "En attente d'une requête…";
   document.getElementById('apiConsole').className = 'console';
   document.getElementById('console1').innerText = "En attente de votre commande…";
+  setMascot('🤖');
   goTo('intro');
 }
 </script>
