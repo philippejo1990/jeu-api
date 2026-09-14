@@ -45,6 +45,7 @@
     margin:6px 6px 0 0; transition:.2s;
   }
   button:hover { background:#0ea5e9; transform:translateY(-2px); }
+  button:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
   button.secondary { background:#334155; color:#f1f5f9; }
   button.secondary:hover { background:#475569; }
   button.mini {
@@ -52,6 +53,11 @@
     background:#334155; color:#e2e8f0;
   }
   button.mini:hover { background:#475569; transform:none; }
+  button.next-pulse { animation: pulseBtn 1.6s ease-in-out infinite; }
+  @keyframes pulseBtn {
+    0%,100% { box-shadow:0 0 0 0 rgba(56,189,248,0.55); }
+    50% { box-shadow:0 0 0 10px rgba(56,189,248,0); }
+  }
   .menu-item {
     display:inline-block; background:#1e293b; padding:10px 14px; border-radius:10px;
     margin:5px; cursor:pointer; border:2px solid transparent;
@@ -187,7 +193,7 @@
   .cert-signature { font-family: Georgia, serif; font-style:italic; font-size:15px; color:#1f2937; }
   .copy-ok { color:#4ade80; font-size:13px; margin-left:8px; font-weight:bold; }
 
-  /* ===== GLOSSAIRE ===== */
+  /* Glossaire */
   .gloss {
     color:#38bdf8; border-bottom:1px dotted #38bdf8; cursor:help;
     font-weight:bold; transition:.15s;
@@ -233,9 +239,7 @@
   .gloss-term:hover { background:#243044; }
   .gloss-term .chevron { color:#64748b; font-size:13px; transition:.2s; }
   .gloss-item.open .chevron { transform:rotate(90deg); }
-  .gloss-def {
-    display:none; padding:0 14px 14px; font-size:14px; line-height:1.6; color:#cbd5e1;
-  }
+  .gloss-def { display:none; padding:0 14px 14px; font-size:14px; line-height:1.6; color:#cbd5e1; }
   .gloss-item.open .gloss-def { display:block; }
   .gloss-def .ex {
     display:block; margin-top:8px; padding:8px 10px; background:#020617;
@@ -244,7 +248,7 @@
   }
   .gloss-empty { text-align:center; color:#64748b; padding:20px; font-size:14px; }
 
-  /* ===== SOMMAIRE / NAVIGATION LIBRE ===== */
+  /* Sommaire */
   .nav-item {
     background:#1e293b; border:1px solid #334155; border-radius:10px;
     padding:14px; margin-bottom:8px; cursor:pointer;
@@ -523,12 +527,21 @@
       <option value="/admin/serveur">/admin/serveur (zone restreinte)</option>
       <option value="/meteo/crash-test">/meteo/crash-test (provoque une panne)</option>
     </select>
-    <br><button onclick="sendRequest()">🚀 Envoyer la requête</button>
+    <br><button id="sendBtn" onclick="sendRequest()">🚀 Envoyer la requête</button>
+
     <div class="console" id="apiConsole">En attente d'une requête…</div>
+
+    <div id="simNextWrap" style="display:none; margin-top:6px;">
+      <p style="font-size:13.5px; color:#94a3b8; margin:10px 0 0;">
+        📄 Prenez le temps de lire la réponse ci-dessus, puis passez à l'explication quand vous êtes prêt.
+      </p>
+      <button id="simNextBtn" class="next-pulse" onclick="goToSimExplain()">Voir l'explication ▶</button>
+    </div>
   </div>
 
   <div class="screen" id="screen-sim-explain">
     <h2 id="explainTitle">🎓 Ce qui vient de se passer</h2>
+    <div class="console" id="explainRecap" style="margin-bottom:14px;"></div>
     <p id="explainText"></p>
     <button onclick="goTo('sim-0')">🔁 Essayer une autre requête</button>
     <button class="secondary" onclick="goTo('end')">Terminer le jeu 🏁</button>
@@ -584,6 +597,8 @@ var sortTimerInterval = null;
 var selectedChip = null;
 var unlockedBadges = [];
 var freeNavUnlocked = false;
+var lastResponseText = '';
+var lastResponseClass = 'console';
 
 var order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap',
   'chap2-0','chap2-1','chap2-2','chap2-recap','sort-intro','sort-game','sort-result',
@@ -661,7 +676,7 @@ var glossary = [
 
 /* ===================== SOMMAIRE (chapitres) ===================== */
 var chapters = [
-  { id:'intro',       ico:'🏁', title:'Introduction',            desc:'Présentation du jeu et de la notion d\'API' },
+  { id:'intro',       ico:'🏁', title:'Introduction',              desc:'Présentation du jeu et de la notion d\'API' },
   { id:'chap1-0',     ico:'🍽️', title:'Chapitre 1 — Le restaurant', desc:'Requête, traitement, réponse' },
   { id:'chap2-0',     ico:'🚨', title:'Chapitre 2 — Les erreurs',   desc:'404, 500, 401 et codes de statut' },
   { id:'sort-intro',  ico:'🧩', title:'Chapitre 3 — Mini-jeu de tri', desc:'Associez les codes HTTP en 30 s' },
@@ -678,6 +693,7 @@ function goTo(id) {
   var idx = order.indexOf(id);
   document.getElementById('progressBar').style.width = (idx >= 0 ? (idx/(order.length-1))*100 : 0) + '%';
   if (id === 'quiz-0') { quizIndex = 0; score = 0; showQuiz(); }
+  if (id === 'sim-0') { resetSimulator(); }
   if (id === 'end') { showEndScreen(); }
   window.scrollTo(0,0);
 }
@@ -1050,10 +1066,30 @@ function nextQuiz() {
 }
 
 /* ===================== SIMULATEUR API ===================== */
+function resetSimulator() {
+  document.getElementById('apiConsole').innerText = "En attente d'une requête…";
+  document.getElementById('apiConsole').className = 'console';
+  document.getElementById('simNextWrap').style.display = 'none';
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function goToSimExplain() {
+  var recap = document.getElementById('explainRecap');
+  recap.className = lastResponseClass;
+  recap.innerText = lastResponseText;
+  goTo('sim-explain');
+}
+
 function sendRequest() {
   var method = document.getElementById('methodSelect').value;
   var endpoint = document.getElementById('endpointSelect').value;
   var consoleEl = document.getElementById('apiConsole');
+  var sendBtn = document.getElementById('sendBtn');
+
+  // On masque le bouton "suivant" et on bloque l'envoi pendant le traitement
+  document.getElementById('simNextWrap').style.display = 'none';
+  sendBtn.disabled = true;
+
   consoleEl.className = 'console';
   consoleEl.innerText = "Envoi de la requête...\n" + method + " " + endpoint;
 
@@ -1065,51 +1101,66 @@ function sendRequest() {
 
     if (endpoint.indexOf('atlantide') !== -1) {
       response = "HTTP/1.1 404 Not Found\n\n{\n  \"erreur\": \"Ville introuvable\"\n}";
-      explain = "L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe pas.";
+      explain = "L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe pas. Ici, la ville « Atlantide » n'est tout simplement pas présente dans la base de données du service météo.";
       title = '🚨 Erreur 404 — Not Found';
       statusClass = 'console error';
       setMascot('😕');
+      playWrongSound();
     } else if (endpoint.indexOf('admin') !== -1) {
       response = "HTTP/1.1 401 Unauthorized\n\n{\n  \"erreur\": \"Authentification requise\"\n}";
-      explain = "L'endpoint est une zone restreinte : erreur 401 Unauthorized. Il faudrait fournir une clé API.";
+      explain = "L'endpoint /admin/serveur est une zone restreinte : erreur 401 Unauthorized. Aucune clé API n'a été fournie, le serveur refuse donc l'accès — comme la zone VIP d'un restaurant sans carte de membre.";
       title = '🚨 Erreur 401 — Unauthorized';
       statusClass = 'console warn';
       setMascot('🚫');
+      playWrongSound();
     } else if (endpoint.indexOf('crash-test') !== -1) {
       response = "HTTP/1.1 500 Internal Server Error\n\n{\n  \"erreur\": \"Une erreur interne est survenue\"\n}";
-      explain = "Le serveur rencontre un problème interne : erreur 500. Votre requête était pourtant correcte.";
+      explain = "Le serveur rencontre un problème interne : erreur 500. Votre requête était pourtant parfaitement correcte — ce n'est pas votre faute, c'est la cuisine qui a pris feu 🔥.";
       title = '🚨 Erreur 500 — Internal Server Error';
       statusClass = 'console error';
       setMascot('🔥');
+      playWrongSound();
     } else if (method === 'GET' && endpoint.indexOf('meteo') !== -1) {
       var ville = endpoint.split('/')[2];
       response = "HTTP/1.1 200 OK\n\n{\n  \"ville\": \"" + ville + "\",\n  \"temperature\": \"22°C\",\n  \"condition\": \"Ensoleillé\"\n}";
-      explain = "Requête GET réussie : l'API renvoie les données au format JSON avec un code 200 OK.";
+      explain = "Requête GET réussie : l'API a interrogé son système météo et renvoie les données au format JSON avec un code 200 OK, sans rien modifier côté serveur.";
       title = '✅ Succès — 200 OK';
       setMascot('🎉');
+      playCorrectSound();
     } else if (method === 'GET' && endpoint.indexOf('favoris') !== -1) {
       response = "HTTP/1.1 200 OK\n\n{\n  \"favoris\": [\"Paris\", \"Tokyo\"]\n}";
-      explain = "Requête GET réussie : la liste des favoris est renvoyée avec un code 200 OK.";
+      explain = "Requête GET réussie : la liste des favoris de l'utilisateur est renvoyée en JSON avec un code 200 OK.";
       title = '✅ Succès — 200 OK';
       setMascot('🎉');
+      playCorrectSound();
     } else if (method === 'POST') {
       response = "HTTP/1.1 201 Created\n\n{\n  \"status\": \"success\",\n  \"message\": \"Donnée créée avec succès\"\n}";
-      explain = "Une requête POST crée une donnée sur le serveur. Code 201 Created.";
+      explain = "Une requête POST envoie des données pour créer une nouvelle ressource sur le serveur (par exemple ajouter une ville en favori). Le code 201 Created confirme la création.";
       title = '✅ Succès — 201 Created';
       setMascot('🎉');
+      playCorrectSound();
     } else if (method === 'DELETE') {
       response = "HTTP/1.1 200 OK\n\n{\n  \"status\": \"success\",\n  \"message\": \"Ressource supprimée\"\n}";
-      explain = "Une requête DELETE supprime une ressource. Code 200 OK.";
+      explain = "Une requête DELETE demande la suppression d'une ressource existante. Le code 200 OK confirme que l'opération a bien été effectuée.";
       title = '✅ Succès — 200 OK';
       setMascot('🎉');
+      playCorrectSound();
     }
 
     addPoints(8);
+
+    lastResponseText = method + " " + endpoint + "\n\nRéponse de l'API :\n" + response;
+    lastResponseClass = statusClass;
+
     consoleEl.className = statusClass;
-    consoleEl.innerText = method + " " + endpoint + "\n\nRéponse de l'API :\n" + response;
+    consoleEl.innerText = lastResponseText;
+
     document.getElementById('explainTitle').innerText = title;
     document.getElementById('explainText').innerText = explain;
-    setTimeout(function(){ goTo('sim-explain'); }, 1200);
+
+    // Affichage du bouton "Suivant" : l'utilisateur avance à son rythme
+    document.getElementById('simNextWrap').style.display = 'block';
+    sendBtn.disabled = false;
   }, 700);
 }
 
@@ -1302,16 +1353,17 @@ function restartGame() {
   elapsedSeconds = 0;
   gameStartTime = null;
   unlockedBadges = [];
+  lastResponseText = '';
+  lastResponseClass = 'console';
   clearInterval(sortTimerInterval);
   document.getElementById('pointsDisplay').innerText = '⭐ 0 pts';
-  document.getElementById('apiConsole').innerText = "En attente d'une requête…";
-  document.getElementById('apiConsole').className = 'console';
   document.getElementById('console1').innerText = "En attente de votre commande…";
   document.getElementById('certificateArea').innerHTML = '';
   document.getElementById('certActions').style.display = 'none';
   document.getElementById('navUnlockMsg').style.display = 'none';
   document.getElementById('userName').value = '';
   document.getElementById('userName').placeholder = 'Votre prénom';
+  resetSimulator();
   setMascot('🤖');
   goTo('intro');
 }
