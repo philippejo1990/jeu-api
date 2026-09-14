@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comprendre les API — Le Jeu</title>
 <style>
   * { box-sizing: border-box; }
@@ -46,6 +47,11 @@
   button:hover { background:#0ea5e9; transform:translateY(-2px); }
   button.secondary { background:#334155; color:#f1f5f9; }
   button.secondary:hover { background:#475569; }
+  button.mini {
+    padding:6px 12px; font-size:13px; margin:0 0 0 6px;
+    background:#334155; color:#e2e8f0;
+  }
+  button.mini:hover { background:#475569; transform:none; }
   .menu-item {
     display:inline-block; background:#1e293b; padding:10px 14px; border-radius:10px;
     margin:5px; cursor:pointer; border:2px solid transparent;
@@ -63,10 +69,12 @@
   }
   .console.error { color:#f87171; border-color:#7f1d1d; }
   .console.warn { color:#fbbf24; border-color:#78350f; }
-  select {
-    background:#1e293b; color:#f1f5f9; border:1px solid #334155; padding:8px;
-    border-radius:8px; margin:5px 6px 5px 0; font-size:14px;
+  select, input[type="text"] {
+    background:#1e293b; color:#f1f5f9; border:1px solid #334155; padding:10px;
+    border-radius:8px; margin:5px 6px 5px 0; font-size:15px;
   }
+  input[type="text"] { width:260px; max-width:100%; }
+  input[type="text"]:focus { outline:none; border-color:#38bdf8; }
   .score { text-align:center; font-size:20px; color:#facc15; margin-top:10px; }
   .badge {
     display:inline-block; background:#1e293b; padding:6px 12px; border-radius:20px;
@@ -83,18 +91,20 @@
   .code-5xx { color:#f87171; font-weight:bold; }
   footer { text-align:center; margin-top:20px; font-size:12px; color:#64748b; }
 
-  /* HUD : mascotte + points */
+  /* HUD */
   .hud {
     display:flex; align-items:center; justify-content:space-between;
     background:#1e293b; border-radius:12px; padding:8px 14px; margin-bottom:16px;
-    border:1px solid #334155;
+    border:1px solid #334155; flex-wrap:wrap; gap:6px;
   }
+  .hud-left { display:flex; align-items:center; gap:10px; }
   .mascot { font-size:34px; transition: transform .2s; }
   .mascot.bounce { animation: bounce .5s ease; }
   @keyframes bounce { 0%{transform:scale(1);} 30%{transform:scale(1.3);} 60%{transform:scale(0.9);} 100%{transform:scale(1);} }
   .points { font-weight:bold; color:#facc15; font-size:15px; }
+  .hud-right { display:flex; align-items:center; }
 
-  /* Shake animation pour erreurs */
+  /* Shake */
   @keyframes shake {
     10%,90% { transform: translateX(-2px); }
     20%,80% { transform: translateX(4px); }
@@ -129,25 +139,188 @@
   }
   .drop-zone.matched { border-color:#4ade80; background:#14532d; color:#bbf7d0; }
   .drop-zone .code-slot { font-weight:bold; font-size:18px; color:#facc15; min-width:40px; text-align:center; }
+
+  /* Certificat */
+  .certificate {
+    background: linear-gradient(145deg, #fdfbf3, #f5f0e1);
+    color: #1f2937;
+    border: 8px double #b8962e;
+    border-radius: 14px;
+    padding: 28px 24px;
+    margin-top: 18px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+    animation: certReveal .8s ease;
+  }
+  @keyframes certReveal {
+    from { opacity:0; transform: scale(0.85) rotate(-2deg); }
+    to { opacity:1; transform: scale(1) rotate(0deg); }
+  }
+  .cert-seal { font-size:46px; line-height:1; }
+  .cert-title {
+    font-size:23px; font-weight:bold; color:#8a6d1f;
+    letter-spacing:1px; margin:10px 0 4px; text-transform:uppercase;
+  }
+  .cert-sub { font-size:13px; color:#6b7280; font-style:italic; margin-bottom:16px; }
+  .cert-name {
+    font-size:32px; font-weight:bold; color:#0f172a;
+    border-bottom:2px solid #b8962e; display:inline-block;
+    padding:0 22px 6px; margin:6px 0 14px;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .cert-text { font-size:14px; color:#374151; line-height:1.7; margin:0 0 14px; }
+  .cert-stats { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:16px 0 10px; }
+  .cert-stat { background:#fff; border:1px solid #d9cba0; border-radius:10px; padding:8px 14px; min-width:92px; }
+  .cert-stat .val { display:block; font-size:19px; font-weight:bold; color:#8a6d1f; }
+  .cert-stat .lbl { font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:.5px; }
+  .cert-badges { margin:12px 0 6px; }
+  .cert-badge {
+    display:inline-block; background:#fff8e1; border:1px solid #b8962e;
+    color:#7c5f14; border-radius:20px; padding:5px 12px; margin:4px; font-size:12px; font-weight:bold;
+  }
+  .cert-mention { font-size:16px; font-weight:bold; color:#166534; margin:12px 0 4px; }
+  .cert-footer {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-top:20px; padding-top:12px; border-top:1px solid #ddd0a8;
+    font-size:11px; color:#6b7280;
+  }
+  .cert-signature { font-family: Georgia, serif; font-style:italic; font-size:15px; color:#1f2937; }
+  .copy-ok { color:#4ade80; font-size:13px; margin-left:8px; font-weight:bold; }
+
+  /* ===== GLOSSAIRE ===== */
+  .gloss {
+    color:#38bdf8; border-bottom:1px dotted #38bdf8; cursor:help;
+    font-weight:bold; transition:.15s;
+  }
+  .gloss:hover { color:#7dd3fc; background:rgba(56,189,248,0.12); border-radius:3px; }
+
+  .modal-overlay {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(2,6,23,0.85); z-index:10000; padding:20px;
+    overflow-y:auto; animation: fade .25s ease;
+  }
+  .modal-overlay.open { display:block; }
+  .modal-box {
+    background:#111827; border:1px solid #334155; border-radius:16px;
+    max-width:640px; margin:30px auto; padding:24px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-head {
+    display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid #334155; padding-bottom:12px; margin-bottom:16px;
+  }
+  .modal-head h2 { margin:0; }
+  .modal-close {
+    background:#334155; color:#f1f5f9; border:none; border-radius:8px;
+    width:34px; height:34px; font-size:18px; cursor:pointer; margin:0;
+  }
+  .modal-close:hover { background:#ef4444; color:#fff; transform:none; }
+  .gloss-search {
+    width:100%; margin:0 0 14px 0; padding:10px 12px;
+    background:#1e293b; border:1px solid #334155; border-radius:8px;
+    color:#f1f5f9; font-size:14px;
+  }
+  .gloss-search:focus { outline:none; border-color:#38bdf8; }
+  .gloss-item {
+    background:#1e293b; border:1px solid #334155; border-radius:10px;
+    margin-bottom:8px; overflow:hidden;
+  }
+  .gloss-item.highlighted { border-color:#facc15; box-shadow:0 0 0 2px rgba(250,204,21,0.35); }
+  .gloss-term {
+    padding:12px 14px; cursor:pointer; font-weight:bold; color:#38bdf8;
+    display:flex; justify-content:space-between; align-items:center; font-size:15px;
+  }
+  .gloss-term:hover { background:#243044; }
+  .gloss-term .chevron { color:#64748b; font-size:13px; transition:.2s; }
+  .gloss-item.open .chevron { transform:rotate(90deg); }
+  .gloss-def {
+    display:none; padding:0 14px 14px; font-size:14px; line-height:1.6; color:#cbd5e1;
+  }
+  .gloss-item.open .gloss-def { display:block; }
+  .gloss-def .ex {
+    display:block; margin-top:8px; padding:8px 10px; background:#020617;
+    border-left:3px solid #38bdf8; border-radius:4px;
+    font-family:monospace; font-size:12.5px; color:#4ade80;
+  }
+  .gloss-empty { text-align:center; color:#64748b; padding:20px; font-size:14px; }
+
+  /* ===== SOMMAIRE / NAVIGATION LIBRE ===== */
+  .nav-item {
+    background:#1e293b; border:1px solid #334155; border-radius:10px;
+    padding:14px; margin-bottom:8px; cursor:pointer;
+    display:flex; align-items:center; gap:12px; transition:.15s;
+  }
+  .nav-item:hover { border-color:#38bdf8; background:#243044; transform:translateX(4px); }
+  .nav-item .nav-ico { font-size:26px; }
+  .nav-item .nav-txt { flex:1; }
+  .nav-item .nav-title { font-weight:bold; font-size:15px; color:#f1f5f9; }
+  .nav-item .nav-desc { font-size:12.5px; color:#94a3b8; }
+  .nav-locked-msg {
+    background:#3f3a12; border:1px solid #facc15; color:#fde68a;
+    border-radius:10px; padding:12px; font-size:13.5px; margin-bottom:14px;
+  }
+
+  @media (max-width: 600px) {
+    .game-box { padding: 18px; }
+    .actors { font-size: 12px; }
+    .actor .emoji { font-size: 28px; }
+    .cert-name { font-size: 24px; }
+    .cert-title { font-size: 18px; }
+    .hud { font-size: 13px; }
+    button.mini { padding:5px 9px; font-size:12px; }
+  }
 </style>
 </head>
 <body>
+
+<!-- ===== MODALE GLOSSAIRE ===== -->
+<div class="modal-overlay" id="glossaryModal" onclick="if(event.target===this) closeGlossary();">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>📖 Glossaire des API</h2>
+      <button class="modal-close" onclick="closeGlossary()">✕</button>
+    </div>
+    <input type="text" class="gloss-search" id="glossSearch" placeholder="🔍 Rechercher un terme..." oninput="renderGlossary(this.value)">
+    <div id="glossaryList"></div>
+  </div>
+</div>
+
+<!-- ===== MODALE SOMMAIRE ===== -->
+<div class="modal-overlay" id="navModal" onclick="if(event.target===this) closeNav();">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>🗺️ Sommaire</h2>
+      <button class="modal-close" onclick="closeNav()">✕</button>
+    </div>
+    <div id="navLockedMsg" class="nav-locked-msg" style="display:none;">
+      🔒 La navigation libre se débloque une fois le jeu terminé une première fois. Continuez l'aventure !
+    </div>
+    <div id="navList"></div>
+  </div>
+</div>
 
 <div class="game-box">
   <h1>🔌 Le Jeu de l'API</h1>
 
   <div class="hud">
-    <div id="mascot" class="mascot">🤖</div>
-    <div id="pointsDisplay" class="points">⭐ 0 pts</div>
+    <div class="hud-left">
+      <div id="mascot" class="mascot">🤖</div>
+      <div id="pointsDisplay" class="points">⭐ 0 pts</div>
+    </div>
+    <div class="hud-right">
+      <button class="mini" onclick="openGlossary()">📖 Glossaire</button>
+      <button class="mini" id="navBtn" onclick="openNav()" style="display:none;">🗺️ Sommaire</button>
+    </div>
   </div>
 
   <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 
   <!-- ECRAN 0 : INTRO -->
   <div class="screen active" id="screen-intro">
-    <p>Bienvenue ! Une <strong>API</strong> (Interface de Programmation d'Application), c'est un mot qui fait peur… mais le concept est simple.</p>
+    <p>Bienvenue ! Une <span class="gloss" onclick="openGlossary('api')">API</span> (Interface de Programmation d'Application), c'est un mot qui fait peur… mais le concept est simple.</p>
     <p>Imaginez que vous allez au restaurant. Vous ne rentrez pas en cuisine préparer vous-même votre plat : vous passez par un <strong>serveur</strong> qui transmet votre commande, puis vous rapporte le résultat.</p>
     <p><strong>Une API fonctionne exactement pareil</strong>, mais entre deux logiciels.</p>
+    <p>💡 Astuce : tous les mots <span class="gloss" onclick="openGlossary()">soulignés en bleu</span> sont cliquables et ouvrent le glossaire.</p>
     <p>Ce jeu va vous le faire vivre en 5 étapes :</p>
     <ul>
       <li>🍽️ Chapitre 1 — Le restaurant</li>
@@ -156,17 +329,17 @@
       <li>🧠 Chapitre 4 — Le quiz</li>
       <li>🎮 Chapitre 5 — Le simulateur d'API</li>
     </ul>
-    <p>Gagnez des <strong>points</strong> ⭐ et débloquez des <strong>badges</strong> 🏅 tout au long du parcours !</p>
+    <p>Gagnez des <strong>points</strong> ⭐, débloquez des <strong>badges</strong> 🏅 et recevez votre <strong>certificat personnalisé</strong> 📜 à la fin !</p>
     <button onclick="startAdventure()">Commencer l'aventure ▶</button>
   </div>
 
-  <!-- CHAPITRE 1 : RESTAURANT -->
+  <!-- CHAPITRE 1 -->
   <div class="screen" id="screen-chap1-0">
     <h2>🍽️ Chapitre 1 — Au restaurant</h2>
     <div class="actors">
-      <div class="actor highlight"><span class="emoji">🙋</span>Vous (le Client)</div>
+      <div class="actor highlight"><span class="emoji">🙋</span>Vous (le <span class="gloss" onclick="openGlossary('client')">Client</span>)</div>
       <div class="arrow">→</div>
-      <div class="actor"><span class="emoji">🧑‍💼</span>Le Serveur</div>
+      <div class="actor"><span class="emoji">🧑‍💼</span>Le <span class="gloss" onclick="openGlossary('serveur')">Serveur</span></div>
       <div class="arrow">→</div>
       <div class="actor"><span class="emoji">👨‍🍳</span>La Cuisine</div>
     </div>
@@ -189,7 +362,7 @@
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Vous venez d'envoyer votre commande <strong id="dishName"></strong> au serveur.</p>
-    <p>👉 En informatique, cela s'appelle une <strong>requête</strong>.</p>
+    <p>👉 En informatique, cela s'appelle une <span class="gloss" onclick="openGlossary('requete')">requête</span>.</p>
     <button onclick="goTo('chap1-2')">Suivant ▶</button>
   </div>
 
@@ -203,7 +376,7 @@
       <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Le serveur ne cuisine pas lui-même : il transmet votre commande à la cuisine.</p>
-    <p>👉 <strong>L'API, c'est exactement ce serveur</strong>.</p>
+    <p>👉 <strong>L'<span class="gloss" onclick="openGlossary('api')">API</span>, c'est exactement ce serveur</strong>.</p>
     <button onclick="goTo('chap1-3')">Suivant ▶</button>
   </div>
 
@@ -217,7 +390,7 @@
       <div class="actor highlight"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>La cuisine prépare votre plat : <strong id="dishName2"></strong> 🔥</p>
-    <p>👉 C'est le <strong>traitement de la requête</strong>.</p>
+    <p>👉 C'est le <strong>traitement de la requête</strong> par le <span class="gloss" onclick="openGlossary('backend')">back-end</span>.</p>
     <button onclick="goTo('chap1-4')">Suivant ▶</button>
   </div>
 
@@ -231,7 +404,7 @@
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
     <p>Le serveur vous rapporte votre plat : <strong id="dishName3"></strong> 🎉</p>
-    <p>👉 C'est la <strong>réponse</strong>.</p>
+    <p>👉 C'est la <span class="gloss" onclick="openGlossary('reponse')">réponse</span>, souvent au format <span class="gloss" onclick="openGlossary('json')">JSON</span>.</p>
     <button onclick="goTo('chap1-recap')">Voir le récapitulatif ▶</button>
   </div>
 
@@ -246,7 +419,7 @@
     <button onclick="goTo('chap2-0')">Chapitre suivant : les erreurs 🚨 ▶</button>
   </div>
 
-  <!-- CHAPITRE 2 : ERREURS -->
+  <!-- CHAPITRE 2 -->
   <div class="screen" id="screen-chap2-0">
     <h2>🚨 Chapitre 2 — Quand ça se passe mal</h2>
     <p>Vous commandez une <strong>pizza aux truffes</strong>... qui n'existe pas sur le menu.</p>
@@ -257,7 +430,7 @@
       <div class="arrow">❌</div>
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
-    <p>👉 <strong>Erreur 404 – Not Found</strong> : la ressource demandée n'existe pas.</p>
+    <p>👉 <span class="gloss" onclick="openGlossary('404')">Erreur 404 – Not Found</span> : la ressource demandée n'existe pas.</p>
     <button onclick="goTo('chap2-1')">Suivant ▶</button>
   </div>
 
@@ -271,7 +444,7 @@
       <div class="arrow">➡️</div>
       <div class="actor danger"><span class="emoji">🔥</span>Cuisine en panne</div>
     </div>
-    <p>👉 <strong>Erreur 500 – Internal Server Error</strong>.</p>
+    <p>👉 <span class="gloss" onclick="openGlossary('500')">Erreur 500 – Internal Server Error</span>.</p>
     <button onclick="goTo('chap2-2')">Suivant ▶</button>
   </div>
 
@@ -285,12 +458,12 @@
       <div class="arrow"></div>
       <div class="actor"><span class="emoji">👨‍🍳</span>Cuisine</div>
     </div>
-    <p>👉 <strong>Erreur 401 – Unauthorized</strong>.</p>
+    <p>👉 <span class="gloss" onclick="openGlossary('401')">Erreur 401 – Unauthorized</span>. Il vous manque une <span class="gloss" onclick="openGlossary('cle')">clé API</span>.</p>
     <button onclick="goTo('chap2-recap')">Voir le tableau des codes ▶</button>
   </div>
 
   <div class="screen" id="screen-chap2-recap">
-    <h2>📋 Les codes de statut HTTP à connaître</h2>
+    <h2>📋 Les <span class="gloss" onclick="openGlossary('statut')">codes de statut</span> HTTP à connaître</h2>
     <table class="code-table">
       <tr><th>Code</th><th>Signification</th><th>Analogie</th></tr>
       <tr><td class="code-2xx">200 OK</td><td>Tout s'est bien passé</td><td>Le plat arrive 🍽️</td></tr>
@@ -301,7 +474,7 @@
     <button onclick="goTo('sort-intro')">Chapitre 3 : Mini-jeu de tri 🧩 ▶</button>
   </div>
 
-  <!-- CHAPITRE 3 : MINI-JEU DE TRI -->
+  <!-- CHAPITRE 3 -->
   <div class="screen" id="screen-sort-intro">
     <h2>🧩 Chapitre 3 — Mini-jeu de tri</h2>
     <p>Vous avez <strong>30 secondes</strong> pour associer chaque code HTTP à sa bonne définition.</p>
@@ -322,7 +495,7 @@
     <button onclick="goTo('quiz-0')">Passer au Quiz 🧠 ▶</button>
   </div>
 
-  <!-- CHAPITRE 4 : QUIZ -->
+  <!-- CHAPITRE 4 -->
   <div class="screen" id="screen-quiz-0">
     <h2>🧠 Chapitre 4 — Le Quiz</h2>
     <p id="quizQuestion"></p>
@@ -331,17 +504,17 @@
     <button id="quizNextBtn" style="display:none;" onclick="nextQuiz()">Question suivante ▶</button>
   </div>
 
-  <!-- CHAPITRE 5 : SIMULATEUR -->
+  <!-- CHAPITRE 5 -->
   <div class="screen" id="screen-sim-0">
     <h2>🎮 Chapitre 5 — Simulateur d'API</h2>
     <p>Construisez une requête vers un service météo fictif. Certaines combinaisons génèrent volontairement des erreurs 😉</p>
-    <p><strong>1. Méthode :</strong></p>
+    <p><strong>1. <span class="gloss" onclick="openGlossary('methode')">Méthode</span> :</strong></p>
     <select id="methodSelect">
       <option value="GET">GET (récupérer une info)</option>
       <option value="POST">POST (envoyer / créer)</option>
       <option value="DELETE">DELETE (supprimer)</option>
     </select>
-    <p><strong>2. Endpoint :</strong></p>
+    <p><strong>2. <span class="gloss" onclick="openGlossary('endpoint')">Endpoint</span> :</strong></p>
     <select id="endpointSelect">
       <option value="/meteo/paris">/meteo/paris</option>
       <option value="/meteo/tokyo">/meteo/tokyo</option>
@@ -364,12 +537,33 @@
   <!-- FIN -->
   <div class="screen" id="screen-end">
     <h2>🏆 Félicitations !</h2>
-    <p>Vous savez maintenant ce qu'est une API : un intermédiaire qui permet à deux logiciels de communiquer via des <strong>requêtes</strong>, des <strong>réponses</strong>, des <strong>endpoints</strong>, des <strong>méthodes</strong> et des <strong>codes de statut</strong>.</p>
+    <p>Vous savez maintenant ce qu'est une API : un intermédiaire qui permet à deux logiciels de communiquer via des <span class="gloss" onclick="openGlossary('requete')">requêtes</span>, des <span class="gloss" onclick="openGlossary('reponse')">réponses</span>, des <span class="gloss" onclick="openGlossary('endpoint')">endpoints</span>, des <span class="gloss" onclick="openGlossary('methode')">méthodes</span> et des <span class="gloss" onclick="openGlossary('statut')">codes de statut</span>.</p>
     <div class="score" id="finalScore"></div>
     <div class="score" id="finalPoints"></div>
     <p style="margin-top:20px;"><strong>Vos badges :</strong></p>
     <div id="badgesList"></div>
-    <button onclick="restartGame()" style="margin-top:20px;">🔄 Rejouer</button>
+
+    <div id="navUnlockMsg" style="display:none; margin-top:18px;" class="nav-locked-msg">
+      🗺️ <strong>Navigation libre débloquée !</strong> Le bouton « Sommaire » en haut vous permet désormais de revenir directement sur n'importe quel chapitre.
+    </div>
+
+    <hr style="border:none; border-top:1px solid #334155; margin:24px 0;">
+
+    <h2>📜 Votre certificat personnalisé</h2>
+    <p>Entrez votre prénom pour générer votre diplôme officiel d'Explorateur des API :</p>
+    <input type="text" id="userName" placeholder="Votre prénom" maxlength="24"
+           onkeydown="if(event.key==='Enter'){generateCertificate();}">
+    <button onclick="generateCertificate()">🏅 Générer mon certificat</button>
+
+    <div id="certificateArea"></div>
+
+    <div id="certActions" style="display:none; margin-top:14px;">
+      <button class="secondary" onclick="copyResult()">📋 Copier mon résultat</button>
+      <button class="secondary" onclick="window.print()">🖨️ Imprimer / PDF</button>
+      <span id="copyConfirm" class="copy-ok" style="display:none;">Copié ✔</span>
+    </div>
+
+    <button onclick="restartGame()" style="margin-top:24px;">🔄 Rejouer</button>
   </div>
 
   <footer>Jeu pédagogique gratuit — Comprendre les API</footer>
@@ -377,26 +571,111 @@
 
 <script>
 /* ===================== ETAT GLOBAL ===================== */
-let score = 0;              // score du quiz
-let quizIndex = 0;
-let currentDish = "";
-let totalPoints = 0;
-let wrongAnswersCount = 0;  // erreurs cumulées (quiz + tri)
-let gameStartTime = null;
-let sortCorrectCount = 0;
-let sortTimeLeft = 30;
-let sortTimerInterval = null;
-let selectedChip = null;
+var score = 0;
+var quizIndex = 0;
+var currentDish = "";
+var totalPoints = 0;
+var wrongAnswersCount = 0;
+var gameStartTime = null;
+var elapsedSeconds = 0;
+var sortCorrectCount = 0;
+var sortTimeLeft = 30;
+var sortTimerInterval = null;
+var selectedChip = null;
+var unlockedBadges = [];
+var freeNavUnlocked = false;
 
-const order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap',
+var order = ['intro','chap1-0','chap1-1','chap1-2','chap1-3','chap1-4','chap1-recap',
   'chap2-0','chap2-1','chap2-2','chap2-recap','sort-intro','sort-game','sort-result',
   'quiz-0','sim-0','sim-explain','end'];
 
+/* ===================== GLOSSAIRE (données) ===================== */
+var glossary = [
+  { key:'api', term:'API',
+    def:"Application Programming Interface. C'est un intermédiaire qui permet à deux logiciels de communiquer entre eux, comme un serveur de restaurant entre le client et la cuisine. Elle définit les règles : ce qu'on peut demander et sous quelle forme.",
+    ex:"Exemple : l'appli météo de votre téléphone interroge l'API d'un service météo." },
+  { key:'requete', term:'Requête (Request)',
+    def:"La demande envoyée par une application à une API. Elle contient au minimum une méthode (GET, POST...), un endpoint (l'adresse), et parfois des données ou une clé d'authentification.",
+    ex:"GET /meteo/paris" },
+  { key:'reponse', term:'Réponse (Response)',
+    def:"Ce que l'API renvoie après avoir traité la requête. Elle contient un code de statut (200, 404...) et généralement des données au format JSON.",
+    ex:"200 OK — { \"temperature\": \"22°C\" }" },
+  { key:'endpoint', term:'Endpoint',
+    def:"L'adresse précise d'une ressource dans une API. Chaque endpoint correspond à une information ou une action différente, comme les rayons d'un magasin.",
+    ex:"/meteo/paris — /utilisateur/favoris" },
+  { key:'methode', term:'Méthode HTTP',
+    def:"Le type d'action demandé à l'API. Les 4 principales : GET (lire), POST (créer), PUT (modifier), DELETE (supprimer).",
+    ex:"GET = consulter, POST = ajouter" },
+  { key:'get', term:'GET',
+    def:"Méthode HTTP utilisée pour récupérer une information, sans jamais rien modifier côté serveur. C'est la plus courante et la plus inoffensive.",
+    ex:"GET /meteo/tokyo" },
+  { key:'post', term:'POST',
+    def:"Méthode HTTP utilisée pour envoyer des données afin de créer une nouvelle ressource. Elle modifie donc l'état du serveur.",
+    ex:"POST /utilisateur/favoris (ajoute une ville)" },
+  { key:'delete', term:'DELETE',
+    def:"Méthode HTTP qui demande la suppression d'une ressource existante. À manipuler avec précaution !",
+    ex:"DELETE /utilisateur/favoris/paris" },
+  { key:'json', term:'JSON',
+    def:"JavaScript Object Notation. Le format texte le plus utilisé pour structurer les données échangées via une API. Il est lisible à la fois par les humains et les machines, organisé en paires « clé : valeur ».",
+    ex:"{ \"ville\": \"Paris\", \"temperature\": 22 }" },
+  { key:'statut', term:'Code de statut HTTP',
+    def:"Un nombre à 3 chiffres renvoyé avec chaque réponse, indiquant comment s'est déroulée la requête. 2xx = succès, 3xx = redirection, 4xx = erreur du client, 5xx = erreur du serveur.",
+    ex:"200, 201, 401, 404, 500" },
+  { key:'200', term:'200 OK',
+    def:"Tout s'est bien passé : la requête a été comprise, traitée, et les données sont renvoyées. C'est le code que l'on veut voir.",
+    ex:"Analogie : le plat arrive à votre table 🍽️" },
+  { key:'401', term:'401 Unauthorized',
+    def:"Vous n'êtes pas identifié ou pas autorisé à accéder à cette ressource. Il faut généralement fournir une clé API ou se connecter avant de réessayer.",
+    ex:"Analogie : accès à la zone VIP refusé sans carte de membre 🚫" },
+  { key:'404', term:'404 Not Found',
+    def:"La ressource demandée n'existe pas à cette adresse. Soit l'endpoint est mal orthographié, soit la donnée n'existe pas dans la base.",
+    ex:"Analogie : le plat commandé n'est pas au menu ❓" },
+  { key:'500', term:'500 Internal Server Error',
+    def:"Le serveur a rencontré un problème interne (bug, surcharge, base de données injoignable). Votre requête était peut-être parfaitement correcte : ce n'est pas votre faute.",
+    ex:"Analogie : la cuisine du restaurant prend feu 🔥" },
+  { key:'429', term:'429 Too Many Requests',
+    def:"Vous avez envoyé trop de requêtes en peu de temps. L'API vous demande de ralentir : c'est le « rate limiting », une protection contre la surcharge.",
+    ex:"Analogie : vous harcelez le serveur toutes les 2 secondes 😅" },
+  { key:'cle', term:'Clé API (API Key / Token)',
+    def:"Un code secret unique qui identifie l'application qui fait la requête. Elle sert à contrôler les accès et à mesurer l'usage. Sans elle, les endpoints protégés renvoient une erreur 401.",
+    ex:"sk_live_a8f3d9c2..." },
+  { key:'header', term:'Header (En-tête)',
+    def:"Des informations complémentaires accompagnant une requête ou une réponse : format des données attendu, clé d'authentification, langue... C'est comme les mentions écrites sur une enveloppe.",
+    ex:"Authorization: Bearer sk_live_a8f3..." },
+  { key:'client', term:'Client',
+    def:"L'application qui envoie la requête : un site web, une application mobile, un autre serveur. Dans l'analogie du restaurant, c'est vous qui commandez.",
+    ex:"Votre appli météo sur smartphone" },
+  { key:'serveur', term:'Serveur',
+    def:"La machine (ou le service) qui reçoit la requête, la traite et renvoie une réponse. Attention à ne pas confondre avec le serveur du restaurant : ici il désigne plutôt l'ensemble cuisine + serveur.",
+    ex:"api.service-meteo.com" },
+  { key:'backend', term:'Back-end',
+    def:"Toute la partie « invisible » d'une application : serveurs, bases de données, logique métier. C'est la cuisine du restaurant, à laquelle le client n'a jamais accès directement.",
+    ex:"Base de données, traitement, calculs" },
+  { key:'rest', term:'REST',
+    def:"Le style d'architecture le plus répandu pour concevoir des API web. Il repose sur les URL (endpoints), les méthodes HTTP et généralement le format JSON. Une API qui suit ces principes est dite « RESTful ».",
+    ex:"GET /utilisateurs/42" },
+  { key:'rate', term:'Rate limiting',
+    def:"Une limite du nombre de requêtes autorisées sur une période donnée (ex: 100 par minute). Elle protège le serveur contre les abus et garantit un service équitable pour tous.",
+    ex:"Dépassement = erreur 429" }
+];
+
+/* ===================== SOMMAIRE (chapitres) ===================== */
+var chapters = [
+  { id:'intro',       ico:'🏁', title:'Introduction',            desc:'Présentation du jeu et de la notion d\'API' },
+  { id:'chap1-0',     ico:'🍽️', title:'Chapitre 1 — Le restaurant', desc:'Requête, traitement, réponse' },
+  { id:'chap2-0',     ico:'🚨', title:'Chapitre 2 — Les erreurs',   desc:'404, 500, 401 et codes de statut' },
+  { id:'sort-intro',  ico:'🧩', title:'Chapitre 3 — Mini-jeu de tri', desc:'Associez les codes HTTP en 30 s' },
+  { id:'quiz-0',      ico:'🧠', title:'Chapitre 4 — Le quiz',       desc:'8 questions pour tester vos acquis' },
+  { id:'sim-0',       ico:'🎮', title:'Chapitre 5 — Le simulateur', desc:'Envoyez de vraies requêtes fictives' },
+  { id:'end',         ico:'🏆', title:'Résultats & certificat',     desc:'Badges, score et diplôme personnalisé' }
+];
+
 /* ===================== NAVIGATION ===================== */
 function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) { screens[i].classList.remove('active'); }
   document.getElementById('screen-' + id).classList.add('active');
-  const idx = order.indexOf(id);
+  var idx = order.indexOf(id);
   document.getElementById('progressBar').style.width = (idx >= 0 ? (idx/(order.length-1))*100 : 0) + '%';
   if (id === 'quiz-0') { quizIndex = 0; score = 0; showQuiz(); }
   if (id === 'end') { showEndScreen(); }
@@ -408,12 +687,114 @@ function startAdventure() {
   goTo('chap1-0');
 }
 
-/* ===================== SON (Web Audio API) ===================== */
+/* ===================== GLOSSAIRE (UI) ===================== */
+function renderGlossary(filter, highlightKey) {
+  var list = document.getElementById('glossaryList');
+  var f = (filter || '').toLowerCase().trim();
+  var html = '';
+  var count = 0;
+
+  for (var i = 0; i < glossary.length; i++) {
+    var g = glossary[i];
+    if (f !== '' && g.term.toLowerCase().indexOf(f) === -1 && g.def.toLowerCase().indexOf(f) === -1) {
+      continue;
+    }
+    count++;
+    var isOpen = (highlightKey && g.key === highlightKey);
+    html += '<div class="gloss-item' + (isOpen ? ' open highlighted' : '') + '" id="gloss-' + g.key + '">' +
+              '<div class="gloss-term" onclick="toggleGlossItem(\'' + g.key + '\')">' +
+                '<span>' + g.term + '</span><span class="chevron">▶</span>' +
+              '</div>' +
+              '<div class="gloss-def">' + g.def +
+                (g.ex ? '<span class="ex">' + g.ex + '</span>' : '') +
+              '</div>' +
+            '</div>';
+  }
+
+  if (count === 0) {
+    html = '<div class="gloss-empty">Aucun terme ne correspond à votre recherche.</div>';
+  }
+  list.innerHTML = html;
+}
+
+function toggleGlossItem(key) {
+  var el = document.getElementById('gloss-' + key);
+  if (!el) return;
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) { playTone(660, 70, 'sine', 0.07); }
+}
+
+function openGlossary(key) {
+  document.getElementById('glossSearch').value = '';
+  renderGlossary('', key);
+  document.getElementById('glossaryModal').classList.add('open');
+  if (key) {
+    setTimeout(function() {
+      var el = document.getElementById('gloss-' + key);
+      if (el) { el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    }, 120);
+  }
+  playTone(740, 90, 'sine', 0.1);
+}
+
+function closeGlossary() {
+  document.getElementById('glossaryModal').classList.remove('open');
+}
+
+/* ===================== SOMMAIRE (UI) ===================== */
+function renderNav() {
+  var list = document.getElementById('navList');
+  var html = '';
+  for (var i = 0; i < chapters.length; i++) {
+    var c = chapters[i];
+    html += '<div class="nav-item" onclick="jumpTo(\'' + c.id + '\')">' +
+              '<div class="nav-ico">' + c.ico + '</div>' +
+              '<div class="nav-txt">' +
+                '<div class="nav-title">' + c.title + '</div>' +
+                '<div class="nav-desc">' + c.desc + '</div>' +
+              '</div>' +
+              '<div style="color:#38bdf8;">▶</div>' +
+            '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function openNav() {
+  if (!freeNavUnlocked) {
+    document.getElementById('navLockedMsg').style.display = 'block';
+    document.getElementById('navList').innerHTML = '';
+  } else {
+    document.getElementById('navLockedMsg').style.display = 'none';
+    renderNav();
+  }
+  document.getElementById('navModal').classList.add('open');
+  playTone(740, 90, 'sine', 0.1);
+}
+
+function closeNav() {
+  document.getElementById('navModal').classList.remove('open');
+}
+
+function jumpTo(id) {
+  closeNav();
+  if (!gameStartTime) { gameStartTime = Date.now(); }
+  if (id === 'sort-intro') { clearInterval(sortTimerInterval); }
+  goTo(id);
+  setMascot('🧭');
+}
+
+function unlockFreeNav() {
+  freeNavUnlocked = true;
+  document.getElementById('navBtn').style.display = 'inline-block';
+  try { localStorage.setItem('apiGameCompleted', '1'); } catch(e) {}
+}
+
+/* ===================== SON ===================== */
 function playTone(freq, duration, type, volume) {
   try {
-    const ctx = window.audioCtx || (window.audioCtx = new (window.AudioContext || window.webkitAudioContext)());
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    var ctx = window.audioCtx || (window.audioCtx = new (window.AudioContext || window.webkitAudioContext)());
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
     osc.type = type || 'sine';
     osc.frequency.value = freq;
     gain.gain.value = volume || 0.15;
@@ -422,19 +803,23 @@ function playTone(freq, duration, type, volume) {
     osc.start();
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (duration/1000));
     osc.stop(ctx.currentTime + (duration/1000));
-  } catch(e) { /* audio non disponible, on ignore */ }
+  } catch(e) {}
 }
 function playCorrectSound() {
   playTone(880, 120, 'sine', 0.15);
-  setTimeout(() => playTone(1320, 150, 'sine', 0.15), 120);
+  setTimeout(function(){ playTone(1320, 150, 'sine', 0.15); }, 120);
 }
-function playWrongSound() {
-  playTone(160, 300, 'sawtooth', 0.2);
+function playWrongSound() { playTone(160, 300, 'sawtooth', 0.2); }
+function playFanfare() {
+  playTone(523, 140, 'sine', 0.16);
+  setTimeout(function(){ playTone(659, 140, 'sine', 0.16); }, 140);
+  setTimeout(function(){ playTone(784, 140, 'sine', 0.16); }, 280);
+  setTimeout(function(){ playTone(1046, 320, 'sine', 0.18); }, 420);
 }
 
-/* ===================== MASCOTTE ===================== */
+/* ===================== MASCOTTE / EFFETS ===================== */
 function setMascot(emoji) {
-  const m = document.getElementById('mascot');
+  var m = document.getElementById('mascot');
   if (!m) return;
   m.innerText = emoji;
   m.classList.remove('bounce');
@@ -442,7 +827,6 @@ function setMascot(emoji) {
   m.classList.add('bounce');
 }
 
-/* ===================== SHAKE ===================== */
 function shakeElement(el) {
   if (!el) return;
   el.classList.remove('shake');
@@ -450,25 +834,23 @@ function shakeElement(el) {
   el.classList.add('shake');
 }
 
-/* ===================== POINTS ===================== */
 function addPoints(n) {
   totalPoints += n;
   document.getElementById('pointsDisplay').innerText = '⭐ ' + totalPoints + ' pts';
 }
 
-/* ===================== CONFETTI ===================== */
 function launchConfetti(count) {
   count = count || 60;
-  const colors = ['#38bdf8','#facc15','#4ade80','#f87171','#a78bfa'];
-  for (let i = 0; i < count; i++) {
-    const piece = document.createElement('div');
+  var colors = ['#38bdf8','#facc15','#4ade80','#f87171','#a78bfa'];
+  for (var i = 0; i < count; i++) {
+    var piece = document.createElement('div');
     piece.className = 'confetti-piece';
     piece.style.left = Math.random()*100 + 'vw';
     piece.style.background = colors[Math.floor(Math.random()*colors.length)];
     piece.style.animation = 'confettiFall ' + (2 + Math.random()*1.5) + 's linear forwards';
     piece.style.transform = 'rotate(' + Math.random()*360 + 'deg)';
     document.body.appendChild(piece);
-    setTimeout(() => piece.remove(), 4000);
+    (function(p){ setTimeout(function(){ p.remove(); }, 4000); })(piece);
   }
 }
 
@@ -481,11 +863,11 @@ function orderDish(dish) {
   document.getElementById('dishName3').innerText = dish;
   addPoints(5);
   setMascot('😊');
-  setTimeout(() => goTo('chap1-1'), 500);
+  setTimeout(function(){ goTo('chap1-1'); }, 500);
 }
 
 /* ===================== MINI-JEU DE TRI ===================== */
-const sortData = [
+var sortData = [
   { code: "200", def: "Tout s'est bien passé ✅" },
   { code: "404", def: "La ressource n'existe pas ❓" },
   { code: "401", def: "Non autorisé / non authentifié 🚫" },
@@ -493,10 +875,10 @@ const sortData = [
 ];
 
 function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
   }
   return a;
 }
@@ -506,44 +888,45 @@ function startSortGame() {
   sortTimeLeft = 30;
   selectedChip = null;
   goTo('sort-game');
+  document.getElementById('sortTimer').innerText = '⏱️ 30';
 
-  const chipsContainer = document.getElementById('sortChips');
-  const zonesContainer = document.getElementById('sortZones');
+  var chipsContainer = document.getElementById('sortChips');
+  var zonesContainer = document.getElementById('sortZones');
   chipsContainer.innerHTML = '';
   zonesContainer.innerHTML = '';
 
-  const shuffledCodes = shuffle(sortData.map(d => d.code));
-  shuffledCodes.forEach(code => {
-    const chip = document.createElement('div');
+  var codes = shuffle(sortData.map(function(d){ return d.code; }));
+  codes.forEach(function(code) {
+    var chip = document.createElement('div');
     chip.className = 'chip';
     chip.innerText = code;
     chip.draggable = true;
     chip.dataset.code = code;
-    chip.addEventListener('dragstart', e => {
+    chip.addEventListener('dragstart', function(e) {
       e.dataTransfer.setData('text/plain', code);
     });
-    chip.addEventListener('click', () => {
+    chip.addEventListener('click', function() {
       if (chip.classList.contains('used')) return;
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      var all = document.querySelectorAll('.chip');
+      for (var i=0;i<all.length;i++) { all[i].classList.remove('selected'); }
       chip.classList.add('selected');
       selectedChip = chip;
     });
     chipsContainer.appendChild(chip);
   });
 
-  const shuffledDefs = shuffle(sortData);
-  shuffledDefs.forEach(item => {
-    const zone = document.createElement('div');
+  var defs = shuffle(sortData);
+  defs.forEach(function(item) {
+    var zone = document.createElement('div');
     zone.className = 'drop-zone';
     zone.dataset.code = item.code;
     zone.innerHTML = '<span>' + item.def + '</span><span class="code-slot">?</span>';
-    zone.addEventListener('dragover', e => e.preventDefault());
-    zone.addEventListener('drop', e => {
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); });
+    zone.addEventListener('drop', function(e) {
       e.preventDefault();
-      const code = e.dataTransfer.getData('text/plain');
-      handleSortAttempt(code, zone);
+      handleSortAttempt(e.dataTransfer.getData('text/plain'), zone);
     });
-    zone.addEventListener('click', () => {
+    zone.addEventListener('click', function() {
       if (selectedChip && !zone.classList.contains('matched')) {
         handleSortAttempt(selectedChip.dataset.code, zone);
       }
@@ -551,18 +934,17 @@ function startSortGame() {
     zonesContainer.appendChild(zone);
   });
 
-  sortTimerInterval = setInterval(() => {
+  clearInterval(sortTimerInterval);
+  sortTimerInterval = setInterval(function() {
     sortTimeLeft--;
     document.getElementById('sortTimer').innerText = '⏱️ ' + sortTimeLeft;
-    if (sortTimeLeft <= 0) {
-      endSortGame();
-    }
+    if (sortTimeLeft <= 0) { endSortGame(); }
   }, 1000);
 }
 
 function handleSortAttempt(code, zone) {
   if (zone.classList.contains('matched')) return;
-  const chip = document.querySelector('.chip[data-code="' + code + '"]:not(.used)');
+  var chip = document.querySelector('.chip[data-code="' + code + '"]:not(.used)');
   if (!chip) return;
 
   if (zone.dataset.code === code) {
@@ -575,8 +957,9 @@ function handleSortAttempt(code, zone) {
     addPoints(15);
     playCorrectSound();
     setMascot('😄');
-    const allMatched = document.querySelectorAll('.drop-zone.matched').length === sortData.length;
-    if (allMatched) endSortGame();
+    if (document.querySelectorAll('.drop-zone.matched').length === sortData.length) {
+      endSortGame();
+    }
   } else {
     wrongAnswersCount++;
     playWrongSound();
@@ -593,51 +976,43 @@ function endSortGame() {
 }
 
 /* ===================== QUIZ ===================== */
-const quiz = [
+var quiz = [
   { q: "Que signifie l'acronyme API ?",
     options: ["Application Programming Interface", "Automated Program Injection", "Advanced Personal Internet"],
-    correct: 0,
-    explain: "API = Application Programming Interface." },
+    correct: 0, explain: "API = Application Programming Interface." },
   { q: "Dans l'analogie du restaurant, à quoi correspond l'API ?",
     options: ["Au client", "Au serveur/serveuse", "À la cuisine"],
-    correct: 1,
-    explain: "L'API joue le rôle d'intermédiaire, comme le serveur." },
+    correct: 1, explain: "L'API joue le rôle d'intermédiaire, comme le serveur." },
   { q: "Qu'est-ce qu'un 'endpoint' ?",
     options: ["Un bug informatique", "Une adresse précise permettant d'accéder à une ressource", "Un mot de passe"],
-    correct: 1,
-    explain: "Un endpoint est l'adresse spécifique d'une ressource." },
+    correct: 1, explain: "Un endpoint est l'adresse spécifique d'une ressource." },
   { q: "Que fait une requête GET ?",
     options: ["Elle supprime une donnée", "Elle récupère une donnée sans la modifier", "Elle bloque le serveur"],
-    correct: 1,
-    explain: "GET sert à récupérer/lire une information." },
+    correct: 1, explain: "GET sert à récupérer/lire une information." },
   { q: "Quel format de données est très courant dans les réponses d'API ?",
     options: ["JSON", "MP3", "PDF"],
-    correct: 0,
-    explain: "Le JSON est le format le plus courant." },
+    correct: 0, explain: "Le JSON est le format le plus courant." },
   { q: "Une API renvoie le code 404. Que signifie-t-il ?",
     options: ["Tout s'est bien passé", "La ressource demandée n'existe pas", "Le serveur a planté"],
-    correct: 1,
-    explain: "404 Not Found signifie que la ressource n'existe pas." },
+    correct: 1, explain: "404 Not Found signifie que la ressource n'existe pas." },
   { q: "Une API renvoie le code 500. À qui la faute ?",
     options: ["Au client (vous)", "Au serveur (l'API elle-même)", "À personne"],
-    correct: 1,
-    explain: "Les codes 5xx indiquent un problème côté serveur." },
+    correct: 1, explain: "Les codes 5xx indiquent un problème côté serveur." },
   { q: "Vous recevez une erreur 401. Que devez-vous faire ?",
     options: ["Réessayer sans rien changer", "Vous authentifier avant de réessayer", "Changer d'ordinateur"],
-    correct: 1,
-    explain: "401 signifie qu'il faut s'authentifier." }
+    correct: 1, explain: "401 signifie qu'il faut s'authentifier." }
 ];
 
 function showQuiz() {
-  const item = quiz[quizIndex];
+  var item = quiz[quizIndex];
   document.getElementById('quizQuestion').innerText = "Question " + (quizIndex+1) + "/" + quiz.length + " : " + item.q;
-  const optsDiv = document.getElementById('quizOptions');
+  var optsDiv = document.getElementById('quizOptions');
   optsDiv.innerHTML = '';
-  item.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
+  item.options.forEach(function(opt, i) {
+    var btn = document.createElement('button');
     btn.innerText = opt;
     btn.className = 'secondary';
-    btn.onclick = () => answerQuiz(i);
+    btn.onclick = function(){ answerQuiz(i); };
     optsDiv.appendChild(btn);
   });
   document.getElementById('quizFeedback').style.display = 'none';
@@ -645,8 +1020,8 @@ function showQuiz() {
 }
 
 function answerQuiz(i) {
-  const item = quiz[quizIndex];
-  const fb = document.getElementById('quizFeedback');
+  var item = quiz[quizIndex];
+  var fb = document.getElementById('quizFeedback');
   fb.style.display = 'block';
   if (i === item.correct) {
     score++;
@@ -663,58 +1038,56 @@ function answerQuiz(i) {
     fb.className = 'feedback wrong';
     fb.innerText = "❌ Pas tout à fait. " + item.explain;
   }
-  document.querySelectorAll('#quizOptions button').forEach(b => b.disabled = true);
+  var btns = document.querySelectorAll('#quizOptions button');
+  for (var b=0; b<btns.length; b++) { btns[b].disabled = true; }
   document.getElementById('quizNextBtn').style.display = 'inline-block';
 }
 
 function nextQuiz() {
   quizIndex++;
-  if (quizIndex < quiz.length) {
-    showQuiz();
-  } else {
-    goTo('sim-0');
-  }
+  if (quizIndex < quiz.length) { showQuiz(); }
+  else { goTo('sim-0'); }
 }
 
 /* ===================== SIMULATEUR API ===================== */
 function sendRequest() {
-  const method = document.getElementById('methodSelect').value;
-  const endpoint = document.getElementById('endpointSelect').value;
-  const consoleEl = document.getElementById('apiConsole');
+  var method = document.getElementById('methodSelect').value;
+  var endpoint = document.getElementById('endpointSelect').value;
+  var consoleEl = document.getElementById('apiConsole');
   consoleEl.className = 'console';
   consoleEl.innerText = "Envoi de la requête...\n" + method + " " + endpoint;
 
-  setTimeout(() => {
-    let response = '';
-    let explain = '';
-    let title = '🎓 Ce qui vient de se passer';
-    let statusClass = 'console';
+  setTimeout(function() {
+    var response = '';
+    var explain = '';
+    var title = '🎓 Ce qui vient de se passer';
+    var statusClass = 'console';
 
-    if (endpoint.includes('atlantide')) {
+    if (endpoint.indexOf('atlantide') !== -1) {
       response = "HTTP/1.1 404 Not Found\n\n{\n  \"erreur\": \"Ville introuvable\"\n}";
       explain = "L'API renvoie une erreur 404 Not Found : la ressource demandée n'existe pas.";
       title = '🚨 Erreur 404 — Not Found';
       statusClass = 'console error';
       setMascot('😕');
-    } else if (endpoint.includes('admin')) {
+    } else if (endpoint.indexOf('admin') !== -1) {
       response = "HTTP/1.1 401 Unauthorized\n\n{\n  \"erreur\": \"Authentification requise\"\n}";
-      explain = "L'endpoint est une zone restreinte : erreur 401 Unauthorized.";
+      explain = "L'endpoint est une zone restreinte : erreur 401 Unauthorized. Il faudrait fournir une clé API.";
       title = '🚨 Erreur 401 — Unauthorized';
       statusClass = 'console warn';
       setMascot('🚫');
-    } else if (endpoint.includes('crash-test')) {
+    } else if (endpoint.indexOf('crash-test') !== -1) {
       response = "HTTP/1.1 500 Internal Server Error\n\n{\n  \"erreur\": \"Une erreur interne est survenue\"\n}";
-      explain = "Le serveur rencontre un problème interne : erreur 500.";
+      explain = "Le serveur rencontre un problème interne : erreur 500. Votre requête était pourtant correcte.";
       title = '🚨 Erreur 500 — Internal Server Error';
       statusClass = 'console error';
       setMascot('🔥');
-    } else if (method === 'GET' && endpoint.includes('meteo')) {
-      const ville = endpoint.split('/')[2];
+    } else if (method === 'GET' && endpoint.indexOf('meteo') !== -1) {
+      var ville = endpoint.split('/')[2];
       response = "HTTP/1.1 200 OK\n\n{\n  \"ville\": \"" + ville + "\",\n  \"temperature\": \"22°C\",\n  \"condition\": \"Ensoleillé\"\n}";
       explain = "Requête GET réussie : l'API renvoie les données au format JSON avec un code 200 OK.";
       title = '✅ Succès — 200 OK';
       setMascot('🎉');
-    } else if (method === 'GET' && endpoint.includes('favoris')) {
+    } else if (method === 'GET' && endpoint.indexOf('favoris') !== -1) {
       response = "HTTP/1.1 200 OK\n\n{\n  \"favoris\": [\"Paris\", \"Tokyo\"]\n}";
       explain = "Requête GET réussie : la liste des favoris est renvoyée avec un code 200 OK.";
       title = '✅ Succès — 200 OK';
@@ -736,41 +1109,187 @@ function sendRequest() {
     consoleEl.innerText = method + " " + endpoint + "\n\nRéponse de l'API :\n" + response;
     document.getElementById('explainTitle').innerText = title;
     document.getElementById('explainText').innerText = explain;
-    setTimeout(() => goTo('sim-explain'), 1200);
+    setTimeout(function(){ goTo('sim-explain'); }, 1200);
   }, 700);
 }
 
 /* ===================== ECRAN FINAL / BADGES ===================== */
-function showEndScreen() {
-  document.getElementById('finalScore').innerText = 'Score au quiz : ' + score + ' / ' + quiz.length;
-  document.getElementById('finalPoints').innerText = 'Total de points cumulés : ⭐ ' + totalPoints + ' pts';
-
-  const elapsedMs = gameStartTime ? (Date.now() - gameStartTime) : 999999;
-  const elapsedMin = elapsedMs / 60000;
-
-  const badges = [
-    { emoji: '🥇', name: 'Expert HTTP', desc: 'Score parfait au quiz', unlocked: score === quiz.length },
-    { emoji: '🔥', name: 'Aucune erreur', desc: 'Aucune mauvaise réponse pendant le quiz', unlocked: wrongAnswersCount === 0 },
-    { emoji: '⚡', name: 'Speed runner', desc: 'Jeu terminé en moins de 6 minutes', unlocked: elapsedMin < 6 }
+function computeBadges() {
+  var elapsedMin = elapsedSeconds / 60;
+  return [
+    { emoji:'🥇', name:'Expert HTTP', desc:'Score parfait au quiz', unlocked: score === quiz.length },
+    { emoji:'🔥', name:'Sans faute', desc:'Aucune erreur sur tout le parcours', unlocked: wrongAnswersCount === 0 },
+    { emoji:'⚡', name:'Speed runner', desc:'Terminé en moins de 6 minutes', unlocked: elapsedMin < 6 },
+    { emoji:'🧩', name:'Trieur d\'élite', desc:'Les 4 codes HTTP associés', unlocked: sortCorrectCount === sortData.length }
   ];
+}
 
-  const badgesList = document.getElementById('badgesList');
+function formatTime(sec) {
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return m + ' min ' + (s < 10 ? '0' : '') + s + ' s';
+}
+
+function showEndScreen() {
+  elapsedSeconds = gameStartTime ? Math.round((Date.now() - gameStartTime)/1000) : 0;
+
+  document.getElementById('finalScore').innerText = 'Score au quiz : ' + score + ' / ' + quiz.length;
+  document.getElementById('finalPoints').innerText = 'Total de points : ⭐ ' + totalPoints + ' pts — ⏱️ ' + formatTime(elapsedSeconds);
+
+  var badges = computeBadges();
+  unlockedBadges = badges.filter(function(b){ return b.unlocked; });
+
+  var badgesList = document.getElementById('badgesList');
   badgesList.innerHTML = '';
-  let anyUnlocked = false;
-  badges.forEach(b => {
-    const div = document.createElement('div');
+  badges.forEach(function(b) {
+    var div = document.createElement('div');
     div.className = 'badge ' + (b.unlocked ? 'unlocked' : 'locked');
     div.innerText = b.emoji + ' ' + b.name + ' — ' + b.desc;
     badgesList.appendChild(div);
-    if (b.unlocked) anyUnlocked = true;
   });
 
-  if (anyUnlocked) {
-    launchConfetti(80);
+  document.getElementById('certificateArea').innerHTML = '';
+  document.getElementById('certActions').style.display = 'none';
+  document.getElementById('copyConfirm').style.display = 'none';
+
+  var wasLocked = !freeNavUnlocked;
+  unlockFreeNav();
+  document.getElementById('navUnlockMsg').style.display = wasLocked ? 'block' : 'none';
+
+  if (unlockedBadges.length > 0) {
+    launchConfetti(70);
     setMascot('🏆');
   } else {
     setMascot('🙂');
   }
+}
+
+/* ===================== CERTIFICAT ===================== */
+function getMention() {
+  var ratio = score / quiz.length;
+  if (ratio === 1 && sortCorrectCount === sortData.length) {
+    return { label:'Mention Félicitations du Jury 🌟', level:'Maître des API' };
+  } else if (ratio >= 0.75) {
+    return { label:'Mention Très Bien 🎖️', level:'Expert des API' };
+  } else if (ratio >= 0.5) {
+    return { label:'Mention Bien 👍', level:'Praticien des API' };
+  }
+  return { label:'Mention Encouragements 💪', level:'Explorateur des API' };
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function generateCertificate() {
+  var input = document.getElementById('userName');
+  var name = input.value.trim();
+
+  if (name === '') {
+    shakeElement(input);
+    playWrongSound();
+    input.placeholder = "Merci d'entrer votre prénom !";
+    input.focus();
+    return;
+  }
+
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+  var mention = getMention();
+  var dateStr = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+  var certId = 'API-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  var badgesHtml = '';
+  if (unlockedBadges.length > 0) {
+    unlockedBadges.forEach(function(b) {
+      badgesHtml += '<span class="cert-badge">' + b.emoji + ' ' + b.name + '</span>';
+    });
+  } else {
+    badgesHtml = '<span class="cert-badge">🎓 Participation complète</span>';
+  }
+
+  var html =
+    '<div class="certificate" id="certificate">' +
+      '<div class="cert-seal">🏅</div>' +
+      '<div class="cert-title">Certificat de Réussite</div>' +
+      '<div class="cert-sub">Le Jeu de l\'API — Parcours d\'initiation</div>' +
+      '<p class="cert-text">Ce certificat atteste que</p>' +
+      '<div class="cert-name">' + escapeHtml(name) + '</div>' +
+      '<p class="cert-text">a complété avec succès l\'ensemble du parcours d\'initiation<br>' +
+      'et maîtrise désormais les notions de <strong>requête</strong>, <strong>réponse</strong>, ' +
+      '<strong>endpoint</strong>, <strong>méthode HTTP</strong> et <strong>codes de statut</strong>.</p>' +
+      '<div class="cert-mention">' + mention.label + '</div>' +
+      '<p class="cert-text" style="margin-top:2px;">Titre décerné : <strong>' + mention.level + '</strong></p>' +
+      '<div class="cert-stats">' +
+        '<div class="cert-stat"><span class="val">' + totalPoints + '</span><span class="lbl">Points</span></div>' +
+        '<div class="cert-stat"><span class="val">' + score + '/' + quiz.length + '</span><span class="lbl">Quiz</span></div>' +
+        '<div class="cert-stat"><span class="val">' + sortCorrectCount + '/' + sortData.length + '</span><span class="lbl">Tri HTTP</span></div>' +
+        '<div class="cert-stat"><span class="val">' + formatTime(elapsedSeconds) + '</span><span class="lbl">Temps</span></div>' +
+      '</div>' +
+      '<div class="cert-badges">' + badgesHtml + '</div>' +
+      '<div class="cert-footer">' +
+        '<div style="text-align:left;">Délivré le ' + dateStr + '<br>Réf. ' + certId + '</div>' +
+        '<div style="text-align:right;"><div class="cert-signature">Le Jeu de l\'API</div>Autorité pédagogique 🤖</div>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('certificateArea').innerHTML = html;
+  document.getElementById('certActions').style.display = 'block';
+  document.getElementById('copyConfirm').style.display = 'none';
+
+  window.lastCertName = name;
+  window.lastCertMention = mention;
+  window.lastCertId = certId;
+
+  playFanfare();
+  launchConfetti(120);
+  setMascot('🎓');
+
+  setTimeout(function() {
+    var c = document.getElementById('certificate');
+    if (c) { c.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  }, 200);
+}
+
+function copyResult() {
+  var name = window.lastCertName || 'Anonyme';
+  var mention = window.lastCertMention || getMention();
+  var badgeTxt = unlockedBadges.map(function(b){ return b.emoji + ' ' + b.name; }).join(', ');
+  if (!badgeTxt) { badgeTxt = 'aucun badge cette fois'; }
+
+  var text =
+    '🏅 Certificat — Le Jeu de l\'API\n' +
+    'Nom : ' + name + '\n' +
+    'Titre : ' + mention.level + ' (' + mention.label + ')\n' +
+    'Points : ' + totalPoints + ' ⭐\n' +
+    'Quiz : ' + score + '/' + quiz.length + ' | Tri HTTP : ' + sortCorrectCount + '/' + sortData.length + '\n' +
+    'Temps : ' + formatTime(elapsedSeconds) + '\n' +
+    'Badges : ' + badgeTxt + '\n' +
+    'Réf. ' + (window.lastCertId || '—');
+
+  var confirmEl = document.getElementById('copyConfirm');
+  function showOk() {
+    confirmEl.style.display = 'inline';
+    playCorrectSound();
+    setTimeout(function(){ confirmEl.style.display = 'none'; }, 2500);
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showOk).catch(function(){ fallbackCopy(text, showOk); });
+  } else {
+    fallbackCopy(text, showOk);
+  }
+}
+
+function fallbackCopy(text, cb) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(ta);
 }
 
 /* ===================== RESET ===================== */
@@ -780,14 +1299,37 @@ function restartGame() {
   totalPoints = 0;
   wrongAnswersCount = 0;
   sortCorrectCount = 0;
+  elapsedSeconds = 0;
   gameStartTime = null;
+  unlockedBadges = [];
+  clearInterval(sortTimerInterval);
   document.getElementById('pointsDisplay').innerText = '⭐ 0 pts';
   document.getElementById('apiConsole').innerText = "En attente d'une requête…";
   document.getElementById('apiConsole').className = 'console';
   document.getElementById('console1').innerText = "En attente de votre commande…";
+  document.getElementById('certificateArea').innerHTML = '';
+  document.getElementById('certActions').style.display = 'none';
+  document.getElementById('navUnlockMsg').style.display = 'none';
+  document.getElementById('userName').value = '';
+  document.getElementById('userName').placeholder = 'Votre prénom';
   setMascot('🤖');
   goTo('intro');
 }
+
+/* ===================== INITIALISATION ===================== */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeGlossary(); closeNav(); }
+});
+
+(function init() {
+  try {
+    if (localStorage.getItem('apiGameCompleted') === '1') {
+      freeNavUnlocked = true;
+      document.getElementById('navBtn').style.display = 'inline-block';
+    }
+  } catch(e) {}
+  renderGlossary('');
+})();
 </script>
 </body>
 </html>
